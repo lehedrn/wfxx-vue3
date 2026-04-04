@@ -232,6 +232,8 @@ public class GenTableConfig
         private String functionName;
         /** 上级菜单ID */
         private Long parentMenuId;
+        /** 表单布局（1-单列 2-双列 3-三列） */
+        private Integer formColNum;
 
         // --- 树表配置（tplCategory=tree 时有效） ---
 
@@ -424,6 +426,14 @@ public class GenTableConfig
         public void setColumns(Map<String, ColumnConfig> columns)
         {
             this.columns = columns;
+        }
+
+        public Integer getFormColNum() {
+            return formColNum;
+        }
+
+        public void setFormColNum(Integer formColNum) {
+            this.formColNum = formColNum;
         }
     }
 

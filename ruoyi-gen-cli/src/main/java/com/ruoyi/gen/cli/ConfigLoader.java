@@ -218,6 +218,9 @@ public class ConfigLoader
         {
             table.setFunctionName(tc.getFunctionName());
         }
+        if (null != tc.getFormColNum()) {
+            table.setFormColNum(tc.getFormColNum());
+        }
 
         // -- 树表 --
         if (StringUtils.isNotEmpty(tc.getTreeCode()))

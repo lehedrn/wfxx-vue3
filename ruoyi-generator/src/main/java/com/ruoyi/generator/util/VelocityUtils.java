@@ -442,8 +442,11 @@ public class VelocityUtils
      * @param formColNum 表单布局方式（1单列 2双列 3三列）
      * @return span 数值字符串
      */
-    public static String getColSpan(int formColNum)
+    public static String getColSpan(Integer formColNum)
     {
+        if (formColNum == null) {
+            formColNum = 1; // 默认单列
+        }
         if (formColNum == 2)
         {
             return "12";
