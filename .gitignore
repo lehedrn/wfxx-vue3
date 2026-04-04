@@ -1,0 +1,72 @@
+######################################################################
+# Build Tools
+
+.gradle
+/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+######################################################################
+# IDE
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+
+### IDE ###
+.idea
+*.iws
+*.iml
+*.ipr
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.local
+
+### JRebel ###
+rebel.xml
+
+### NetBeans ###
+nbproject/private/
+build/*
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+######################################################################
+# Others
+*.log
+*.xml.versionsBackup
+*.swp
+
+!*/build/*.java
+!*/build/*.html
+!*/build/*.xml
+
+######################################################################
+# ruoyi-ui
+ruoyi-ui/node_modules/
+ruoyi-ui/dist/
+ruoyi-ui/npm-debug.log*
+**/*.log
+
+ruoyi-ui/tests/**/coverage/
+ruoyi-ui/tests/e2e/reports
+ruoyi-ui/selenium-debug.log
+
+ruoyi-ui/package-lock.json
+ruoyi-ui/yarn.lock
+
+########################################################################
+# my
+upload_path
+logs
