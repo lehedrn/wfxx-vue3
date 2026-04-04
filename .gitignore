@@ -65,6 +65,8 @@ ruoyi-ui/selenium-debug.log
 
 ruoyi-ui/package-lock.json
 ruoyi-ui/yarn.lock
+ruoyi-ui/pnpm-lock.yaml
+ruoyi-ui/pnpm-workspace.yaml
 
 ########################################################################
 # my
