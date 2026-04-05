@@ -72,3 +72,4 @@ ruoyi-ui/pnpm-workspace.yaml
 # my
 upload_path
 logs
+generate/output

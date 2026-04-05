@@ -1,0 +1,213 @@
+
+# ==================== 全局默认配置 ====================
+global:
+  author: lihd                    # 作者
+  packageName: com.ruoyi.demo    # 生成包路径
+  moduleName: demo               # 模块名（默认从 packageName 提取末段）
+  autoRemovePre: true              # 自动去除表前缀
+  tablePrefix: demo_                # 表前缀（多个逗号分隔）
+  tplCategory: crud                # 模板类型: crud / tree / sub
+  tplWebType: element-plus         # 前端类型: element-ui / element-plus
+  parentMenuId: 4                  # 上级菜单ID
+
+# ==================== 表级配置 ====================
+# 按表名配置，覆盖全局默认。每张表可配置：
+#   基本信息：tableName, tableComment, className, functionAuthor, remark
+#   生成信息：tplCategory, tplWebType, packageName, moduleName, businessName,
+#            functionName, parentMenuId, treeCode, treeParentCode, treeName,
+#            subTableName, subTableFkName
+#   字段信息：columns 下按列名配置
+tables:
+  demo_customer:
+    # -- 基本信息 --
+    className: Customer              # 实体类名（默认自动转换）
+    functionAuthor: lihd        # 覆盖全局 author
+    remark: 客户管理模块
+
+    # -- 生成信息 --
+    tplCategory: sub
+    tplWebType: element-plus
+    packageName: com.ruoyi.demo  # 覆盖全局包名
+    moduleName: demo
+    businessName: customer
+    functionName: 客户管理
+    parentMenuId: 4
+    formColNum: 2
+
+    # -- 主子表配置 --
+    subTableName: demo_goods
+    subTableFkName: customer_id
+
+    # -- 字段信息（按列名配置） --
+    columns:
+      customer_id:
+        columnComment: 客户id
+        javaType: Long
+        javaField: customerId
+        isInsert: true
+        isList: false
+        isRequired: false
+        queryType: EQ
+        htmlType: input
+
+      customer_name:
+        columnComment: 客户姓名
+        javaType: String
+        javaField: customerName
+        isInsert: true
+        isEdit: true
+        isList: true
+        isQuery: true
+        isRequired: true
+        queryType: LIKE
+        htmlType: input
+
+      phonenumber:
+        columnComment: 手机号码
+        javaType: String
+        javaField: phonenumber
+        isInsert: true
+        isEdit: true
+        isList: true
+        isQuery: true
+        isRequired: true
+        queryType: LIKE
+        htmlType: input
+
+      sex:
+        columnComment: 性别（0男 1女 2未知）
+        javaType: String
+        javaField: sex
+        isInsert: true
+        isEdit: true
+        isList: true
+        isQuery: true
+        isRequired: false
+        queryType: EQ
+        htmlType: select
+        dictType: sys_user_sex
+
+      birthday:
+        columnComment: 生日
+        javaType: Date
+        javaField: birthday
+        isInsert: true
+        isEdit: true
+        isList: true
+        isQuery: false
+        isRequired: false
+        queryType: EQ
+        htmlType: datetime
+      remark:
+        columnComment: 客户描述
+        javaType: String
+        javaField: remark
+        isInsert: true
+        isEdit: true
+        isList: true
+        isQuery: false
+        isRequired: false
+        queryType: LIKE
+        htmlType: textarea
+
+  demo_goods:
+    # -- 基本信息 --
+    className: Goods              # 实体类名（默认自动转换）
+    functionAuthor: lihd        # 覆盖全局 author
+    remark: 商品管理模块
+
+    # -- 生成信息 --
+    tplCategory: crud
+    tplWebType: element-plus
+    packageName: com.ruoyi.demo  # 覆盖全局包名
+    moduleName: demo
+    businessName: goods
+    functionName: 商品管理
+    parentMenuId: 4
+    formColNum: 1
+
+    # -- 字段信息（按列名配置） --
+    columns:
+      goods_id:
+        columnComment: 商品id
+        javaType: Long
+        javaField: goodsId
+        isInsert: true
+        isList: false
+        isRequired: false
+        queryType: EQ
+        htmlType: input
+
+      customer_id:
+        columnComment: 客户id
+        javaType: Long
+        javaField: customerId
+        isInsert: true
+        isEdit: true
+        isRequired: true
+        isList: false
+        isQuery: true
+        queryType: EQ
+        htmlType: input
+
+      type:
+        columnComment: 商品种类
+        javaType: String
+        javaField: type
+        isInsert: true
+        isEdit: true
+        isList: true
+        isQuery: true
+        isRequired: true
+        queryType: EQ
+        htmlType: select
+        dictType: goods_type
+
+      name:
+        columnComment: 商品名称
+        javaType: String
+        javaField: name
+        isInsert: true
+        isEdit: true
+        isList: true
+        isQuery: true
+        isRequired: true
+        queryType: LIKE
+        htmlType: input
+
+      weight:
+        columnComment: 商品重量
+        javaType: BigDecimal
+        javaField: weight
+        isInsert: true
+        isEdit: true
+        isList: true
+        isQuery: true
+        isRequired: false
+        queryType: LIKE
+        htmlType: input
+
+      price:
+        columnComment: 商品价格
+        javaType: BigDecimal
+        javaField: price
+        isInsert: true
+        isEdit: true
+        isList: true
+        isQuery: false
+        isRequired: true
+        queryType: EQ
+        htmlType: input
+
+      date:
+        columnComment: 商品时间
+        javaType: Date
+        javaField: date
+        isInsert: true
+        isEdit: true
+        isList: false
+        isQuery: false
+        isRequired: false
+        queryType: EQ
+        htmlType: datetime
+

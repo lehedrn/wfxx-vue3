@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.demo.mapper.CustomerMapper">
+    
+    <resultMap type="Customer" id="CustomerResult">
+        <result property="customerId"    column="customer_id"    />
+        <result property="customerName"    column="customer_name"    />
+        <result property="phonenumber"    column="phonenumber"    />
+        <result property="sex"    column="sex"    />
+        <result property="birthday"    column="birthday"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <resultMap id="CustomerGoodsResult" type="Customer" extends="CustomerResult">
+        <collection property="goodsList" ofType="Goods" column="customer_id" select="selectGoodsList" />
+    </resultMap>
+
+    <resultMap type="Goods" id="GoodsResult">
+        <result property="goodsId"    column="goods_id"    />
+        <result property="customerId"    column="customer_id"    />
+        <result property="name"    column="name"    />
+        <result property="weight"    column="weight"    />
+        <result property="price"    column="price"    />
+        <result property="date"    column="date"    />
+        <result property="type"    column="type"    />
+    </resultMap>
+
+    <sql id="selectCustomerVo">
+        select customer_id, customer_name, phonenumber, sex, birthday, remark from demo_customer
+    </sql>
+
+    <select id="selectCustomerList" parameterType="Customer" resultMap="CustomerResult">
+        <include refid="selectCustomerVo"/>
+        <where>  
+            <if test="customerName != null  and customerName != ''"> and customer_name like concat('%', #{customerName}, '%')</if>
+            <if test="phonenumber != null  and phonenumber != ''"> and phonenumber like concat('%', #{phonenumber}, '%')</if>
+            <if test="sex != null  and sex != ''"> and sex = #{sex}</if>
+        </where>
+    </select>
+    
+    <select id="selectCustomerByCustomerId" parameterType="Long" resultMap="CustomerGoodsResult">
+        select customer_id, customer_name, phonenumber, sex, birthday, remark
+        from demo_customer
+        where customer_id = #{customerId}
+    </select>
+
+    <select id="selectGoodsList" resultMap="GoodsResult">
+        select goods_id, customer_id, name, weight, price, date, type
+        from demo_goods
+        where customer_id = #{customer_id}
+    </select>
+
+    <insert id="insertCustomer" parameterType="Customer" useGeneratedKeys="true" keyProperty="customerId">
+        insert into demo_customer
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="customerName != null and customerName != ''">customer_name,</if>
+            <if test="phonenumber != null and phonenumber != ''">phonenumber,</if>
+            <if test="sex != null">sex,</if>
+            <if test="birthday != null">birthday,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="customerName != null and customerName != ''">#{customerName},</if>
+            <if test="phonenumber != null and phonenumber != ''">#{phonenumber},</if>
+            <if test="sex != null">#{sex},</if>
+            <if test="birthday != null">#{birthday},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCustomer" parameterType="Customer">
+        update demo_customer
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="customerName != null and customerName != ''">customer_name = #{customerName},</if>
+            <if test="phonenumber != null and phonenumber != ''">phonenumber = #{phonenumber},</if>
+            <if test="sex != null">sex = #{sex},</if>
+            <if test="birthday != null">birthday = #{birthday},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where customer_id = #{customerId}
+    </update>
+
+    <delete id="deleteCustomerByCustomerId" parameterType="Long">
+        delete from demo_customer where customer_id = #{customerId}
+    </delete>
+
+    <delete id="deleteCustomerByCustomerIds" parameterType="String">
+        delete from demo_customer where customer_id in 
+        <foreach item="customerId" collection="array" open="(" separator="," close=")">
+            #{customerId}
+        </foreach>
+    </delete>
+    
+    <delete id="deleteGoodsByCustomerIds" parameterType="String">
+        delete from demo_goods where customer_id in 
+        <foreach item="customerId" collection="array" open="(" separator="," close=")">
+            #{customerId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteGoodsByCustomerId" parameterType="Long">
+        delete from demo_goods where customer_id = #{customerId}
+    </delete>
+
+    <insert id="batchGoods">
+        insert into demo_goods( goods_id, customer_id, name, weight, price, date, type) values
+        <foreach item="item" index="index" collection="list" separator=",">
+            ( #{item.goodsId}, #{item.customerId}, #{item.name}, #{item.weight}, #{item.price}, #{item.date}, #{item.type})
+        </foreach>
+    </insert>
+</mapper>
