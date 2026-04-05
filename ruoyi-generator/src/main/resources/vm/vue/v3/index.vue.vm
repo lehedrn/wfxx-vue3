@@ -543,6 +543,26 @@ function handleUpdate(row) {
 function submitForm() {
   proxy.#[[$]]#refs["${businessName}Ref"].validate(valid => {
     if (valid) {
+#if($table.sub)
+      // 校验子表必填字段
+      for (let i = 0; i < ${subclassName}List.value.length; i++) {
+        const row = ${subclassName}List.value[i]
+#foreach($column in $subTable.columns)
+#if($column.isRequired() && !$column.isPk() && $column.javaField != ${subTableFkclassName})
+#set($parentheseIndex=$column.columnComment.indexOf("("))
+#if($parentheseIndex != -1)
+#set($subComment=$column.columnComment.substring(0, $parentheseIndex))
+#else
+#set($subComment=$column.columnComment)
+#end
+        if (!row.${column.javaField} || row.${column.javaField} === "") {
+          proxy.#[[$modal]]#.msgError("第 " + (i + 1) + " 行的${subComment}不能为空")
+          return
+        }
+#end
+#end
+      }
+#end
 #foreach ($column in $columns)
 #if($column.htmlType == "checkbox")
       form.value.$column.javaField = form.value.${column.javaField}.join(",")
@@ -597,17 +617,14 @@ function handleDelete${subClassName}() {
   if (checked${subClassName}.value.length == 0) {
     proxy.#[[$modal]]#.msgError("请先选择要删除的${subTable.functionName}数据")
   } else {
-    const ${subclassName}s = ${subclassName}List.value
-    const checked${subClassName}s = checked${subClassName}.value
-    ${subclassName}List.value = ${subclassName}s.filter(function(item) {
-      return checked${subClassName}s.indexOf(item.index) == -1
-    })
+    const indices = new Set(checked${subClassName}.value)
+    ${subclassName}List.value = ${subclassName}List.value.filter((_, idx) => !indices.has(idx))
   }
 }
 
 /** 复选框选中数据 */
 function handle${subClassName}SelectionChange(selection) {
-  checked${subClassName}.value = selection.map(item => item.index)
+  checked${subClassName}.value = selection.map(item => ${subclassName}List.value.indexOf(item))
 }
 
 #end
