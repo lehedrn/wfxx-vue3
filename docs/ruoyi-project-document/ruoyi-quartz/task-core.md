@@ -150,7 +150,7 @@ public static boolean whiteList(String invokeTarget) {
 }
 ```
 
-> **安全说明**: 默认允许 `com.ruoyi` 和 `com.ruoyi.*` 包，禁止 `java.*`, `javax.*`, `com.sun.*` 等系统包。
+> **安全说明**: 默认允许 `com.ruoyi.quartz.task` 包，禁止 `java.net.URL`, `javax.naming.InitialContext`, `org.yaml.snakeyaml`, `org.springframework`, `org.apache`, `com.ruoyi.common.utils.file`, `com.ruoyi.common.config`, `com.ruoyi.generator` 等。
 
 ---
 

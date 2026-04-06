@@ -110,7 +110,7 @@ controller/
 
 #### 5. 立即执行任务
 
-**请求**: `POST /monitor/job/run`
+**请求**: `PUT /monitor/job/run`
 
 ```json
 {
