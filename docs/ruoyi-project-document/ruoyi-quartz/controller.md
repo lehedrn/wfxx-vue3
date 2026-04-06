@@ -32,7 +32,8 @@ controller/
 | PUT | `/` | 修改任务 | SysJob 对象 |
 | DELETE | `/{jobIds}` | 删除任务 | jobId 数组（路径参数） |
 | PUT | `/changeStatus` | 修改任务状态 | SysJob（jobId + status） |
-| POST | `/run` | 立即执行一次任务 | SysJob（jobId + jobGroup） |
+| PUT | `/run` | 立即执行一次任务 | SysJob（jobId + jobGroup） |
+| POST | `/export` | 导出任务 Excel | SysJob 查询条件 |
 
 ### 请求/响应示例
 

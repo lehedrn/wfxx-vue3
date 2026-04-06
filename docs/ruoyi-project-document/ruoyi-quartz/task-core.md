@@ -333,11 +333,13 @@ Date next = CronUtils.getNextExecution("0 0 12 * * ?"); // 今天 12:00
 ```java
 public interface MisfirePolicy {
     int MISFIRE_DEFAULT = 0;              // 默认
-    int MISFIRE_IGNORE_MISFIRES = 1;      // 忽略
-    int MISFIRE_FIRE_AND_PROCEED = 2;     // 执行一次
-    int MISFIRE_DO_NOTHING = 3;           // 不执行
+    int MISFIRE_IGNORE_MISFIRES = 1;      // 立即触发执行/忽略错过的
+    int MISFIRE_FIRE_AND_PROCEED = 2;     // 触发一次执行
+    int MISFIRE_DO_NOTHING = 3;           // 不触发立即执行
 }
 ```
+
+> 对应源码：`ScheduleConstants.MISFIRE_DEFAULT = 0`, `MISFIRE_IGNORE_MISFIRES = 1`, `MISFIRE_FIRE_AND_PROCEED = 2`, `MISFIRE_DO_NOTHING = 3`
 
 ### 任务状态
 

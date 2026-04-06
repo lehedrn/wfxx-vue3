@@ -33,9 +33,9 @@ domain/
 | jobGroup | String | 任务组名 |
 | invokeTarget | String | 调用目标字符串（格式：`beanName.methodName(params)`） |
 | cronExpression | String | Cron 表达式 |
-| misfirePolicy | Integer | 错过执行策略（0 默认 1 忽略 2 执行一次 3 不执行） |
-| concurrent | Integer | 是否并发（0 禁止 1 允许） |
-| status | Integer | 状态（0 正常 1 暂停） |
+| misfirePolicy | String | 错过执行策略（0 默认 1 立即触发 2 触发一次 3 不触发） |
+| concurrent | String | 是否并发（0 允许 1 禁止） |
+| status | String | 状态（0 正常 1 暂停） |
 
 ### 字段详解
 
@@ -108,7 +108,7 @@ jobMapper.insertJob(job);
 | jobGroup | String | 任务组名 |
 | invokeTarget | String | 调用目标字符串 |
 | jobMessage | String | 日志信息 |
-| status | Integer | 状态（0 正常 1 失败） |
+| status | String | 状态（0 正常 1 失败） |
 | exceptionInfo | String | 异常信息（失败时） |
 | startTime | Date | 开始时间 |
 | endTime | Date | 结束时间 |
