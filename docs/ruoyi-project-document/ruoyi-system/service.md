@@ -8,14 +8,26 @@
 
 ```
 service/
-├── ISysPostService.java           # 岗位服务接口
-├── ISysConfigService.java         # 参数配置服务接口
-├── ISysNoticeService.java         # 通知公告服务接口
-├── ISysNoticeReadService.java     # 公告已读服务接口
-├── ISysOperLogService.java        # 操作日志服务接口
-├── ISysLogininforService.java     # 登录日志服务接口
-├── ISysUserOnlineService.java     # 在线用户服务接口
+├── ISysUserService.java         # 用户服务接口
+├── ISysRoleService.java         # 角色服务接口
+├── ISysMenuService.java         # 菜单服务接口
+├── ISysDeptService.java         # 部门服务接口
+├── ISysDictTypeService.java     # 字典类型服务接口
+├── ISysDictDataService.java     # 字典数据服务接口
+├── ISysPostService.java         # 岗位服务接口
+├── ISysConfigService.java       # 参数配置服务接口
+├── ISysNoticeService.java       # 通知公告服务接口
+├── ISysNoticeReadService.java   # 公告已读服务接口
+├── ISysOperLogService.java      # 操作日志服务接口
+├── ISysLogininforService.java   # 登录日志服务接口
+├── ISysUserOnlineService.java   # 在线用户服务接口
 └── impl/
+    ├── SysUserServiceImpl.java    # 用户服务实现
+    ├── SysRoleServiceImpl.java    # 角色服务实现
+    ├── SysMenuServiceImpl.java    # 菜单服务实现
+    ├── SysDeptServiceImpl.java    # 部门服务实现
+    ├── SysDictTypeServiceImpl.java  # 字典类型服务实现
+    ├── SysDictDataServiceImpl.java  # 字典数据服务实现
     ├── SysPostServiceImpl.java    # 岗位服务实现
     ├── SysConfigServiceImpl.java  # 参数配置服务实现
     ├── SysNoticeServiceImpl.java  # 通知公告服务实现
@@ -263,39 +275,63 @@ public interface ISysNoticeService {
 public interface ISysNoticeReadService {
     
     /**
-     * 查询公告已读记录
-     * @param noticeReadId 已读记录 ID
-     * @return 已读记录信息
-     */
-    SysNoticeRead selectNoticeReadById(Long noticeReadId);
-    
-    /**
-     * 查询公告已读记录列表
-     * @param noticeRead 已读记录信息（查询条件）
-     * @return 已读记录集合
-     */
-    List<SysNoticeRead> selectNoticeReadList(SysNoticeRead noticeRead);
-    
-    /**
-     * 新增公告已读记录
-     * @param noticeRead 已读记录信息
-     * @return 结果
-     */
-    int insertNoticeRead(SysNoticeRead noticeRead);
-    
-    /**
-     * 查询公告阅读情况
+     * 标记已读（幂等，重复调用不报错）
      * @param noticeId 公告 ID
-     * @return 阅读情况
+     * @param userId 用户 ID
      */
-    Map<String, Object> selectNoticeReadStatus(Long noticeId);
+    void markRead(Long noticeId, Long userId);
     
     /**
-     * 清空公告已读记录
-     * @param noticeId 公告 ID
+     * 查询某用户未读公告数量
+     * @param userId 用户 ID
+     * @return 未读数量
      */
-    void deleteNoticeReadByNoticeId(Long noticeId);
+    int selectUnreadCount(Long userId);
+    
+    /**
+     * 查询公告列表并标记当前用户已读状态（用于首页展示）
+     * @param userId 用户 ID
+     * @param limit 最多返回条数
+     * @return 带 isRead 标记的公告列表
+     */
+    List<SysNotice> selectNoticeListWithReadStatus(Long userId, int limit);
+    
+    /**
+     * 批量标记已读
+     * @param userId 用户 ID
+     * @param noticeIds 公告 ID 数组
+     */
+    void markReadBatch(Long userId, Long[] noticeIds);
+    
+    /**
+     * 删除公告时清理对应已读记录
+     * @param noticeIds 公告 ID 数组
+     */
+    void deleteByNoticeIds(Long[] noticeIds);
 }
+```
+
+**使用说明**:
+
+```java
+@Autowired
+private ISysNoticeReadService noticeReadService;
+
+// 标记单条公告为已读
+noticeReadService.markRead(noticeId, userId);
+
+// 查询用户未读公告数量
+int unreadCount = noticeReadService.selectUnreadCount(userId);
+
+// 查询带已读状态的公告列表（首页展示）
+List<SysNotice> notices = noticeReadService.selectNoticeListWithReadStatus(userId, 10);
+
+// 批量标记已读
+Long[] noticeIds = {1L, 2L, 3L};
+noticeReadService.markReadBatch(userId, noticeIds);
+
+// 删除公告时清理记录
+noticeReadService.deleteByNoticeIds(noticeIds);
 ```
 
 ---
@@ -394,39 +430,56 @@ public interface ISysLogininforService {
 public interface ISysUserOnlineService {
     
     /**
-     * 通过会话编号查询在线用户
-     * @param tokenId 会话编号
+     * 通过登录地址查询信息
+     * @param ipaddr 登录地址
+     * @param user 用户信息
+     * @return 在线用户信息
+     */
+    SysUserOnline selectOnlineByIpaddr(String ipaddr, LoginUser user);
+    
+    /**
+     * 通过用户名称查询信息
+     * @param userName 用户名称
+     * @param user 用户信息
+     * @return 在线用户信息
+     */
+    SysUserOnline selectOnlineByUserName(String userName, LoginUser user);
+    
+    /**
+     * 通过登录地址/用户名称查询信息
+     * @param ipaddr 登录地址
+     * @param userName 用户名称
+     * @param user 用户信息
+     * @return 在线用户信息
+     */
+    SysUserOnline selectOnlineByInfo(String ipaddr, String userName, LoginUser user);
+    
+    /**
+     * 设置在线用户信息
+     * @param user 用户信息
      * @return 在线用户
      */
-    SysUserOnline selectOnlineByTokenId(String tokenId);
-    
-    /**
-     * 通过用户名查询在线用户
-     * @param userName 用户名
-     * @return 在线用户
-     */
-    SysUserOnline selectOnlineByUserName(String userName);
-    
-    /**
-     * 查询在线用户集合
-     * @param ipaddr IP 地址
-     * @param userName 用户名
-     * @return 在线用户集合
-     */
-    TableDataInfo selectOnlineUserList(String ipaddr, String userName);
-    
-    /**
-     * 强退在线用户
-     * @param tokenId 会话编号
-     */
-    void logoutByTokenId(String tokenId);
-    
-    /**
-     * 查询会话集合
-     * @return 会话集合
-     */
-    List<SysUserOnline> selectAll();
+    SysUserOnline loginUserToUserOnline(LoginUser user);
 }
+```
+
+**使用说明**:
+
+```java
+@Autowired
+private ISysUserOnlineService userOnlineService;
+
+// 通过 IP 查询在线用户
+SysUserOnline online = userOnlineService.selectOnlineByIpaddr("192.168.1.100", loginUser);
+
+// 通过用户名查询在线用户
+SysUserOnline online = userOnlineService.selectOnlineByUserName("admin", loginUser);
+
+// 通过 IP 和用户名查询
+SysUserOnline online = userOnlineService.selectOnlineByInfo("192.168.1.100", "admin", loginUser);
+
+// 将 LoginUser 转换为 SysUserOnline
+SysUserOnline online = userOnlineService.loginUserToUserOnline(loginUser);
 ```
 
 ---
@@ -564,6 +617,8 @@ public class SysPostServiceImpl implements ISysPostService {
 
 ### SysConfigServiceImpl - 参数配置服务实现
 
+**实现路径**: `com.ruoyi.system.service.impl.SysConfigServiceImpl`
+
 ```java
 @Service
 public class SysConfigServiceImpl implements ISysConfigService {
@@ -572,28 +627,33 @@ public class SysConfigServiceImpl implements ISysConfigService {
     private SysConfigMapper configMapper;
     
     @Autowired
-    private RedisTemplate<String, String> redisTemplate;
+    private RedisCache redisCache;
     
     /**
-     * 根据键名查询参数配置信息
+     * 项目启动时，初始化参数到缓存
+     */
+    @PostConstruct
+    public void init() {
+        loadingConfigCache();
+    }
+    
+    /**
+     * 根据键名查询参数配置信息（先查缓存，缓存不存在查数据库）
      */
     @Override
     public String selectConfigByKey(String configKey) {
-        // 1. 先从缓存获取
-        String configValue = redisTemplate.opsForValue().get(getCacheKey(configKey));
+        String configValue = Convert.toStr(redisCache.getCacheObject(getCacheKey(configKey)));
         if (StringUtils.isNotEmpty(configValue)) {
             return configValue;
         }
-        
-        // 2. 缓存不存在，查询数据库
-        SysConfig config = configMapper.selectConfigByKey(configKey);
-        if (StringUtils.isNull(config)) {
-            return null;
+        SysConfig config = new SysConfig();
+        config.setConfigKey(configKey);
+        SysConfig retConfig = configMapper.selectConfig(config);
+        if (StringUtils.isNotNull(retConfig)) {
+            redisCache.setCacheObject(getCacheKey(configKey), retConfig.getConfigValue());
+            return retConfig.getConfigValue();
         }
-        
-        // 3. 存入缓存
-        redisTemplate.opsForValue().set(getCacheKey(configKey), config.getConfigValue());
-        return config.getConfigValue();
+        return StringUtils.EMPTY;
     }
     
     /**
@@ -602,10 +662,10 @@ public class SysConfigServiceImpl implements ISysConfigService {
     @Override
     public boolean selectCaptchaEnabled() {
         String captchaEnabled = selectConfigByKey("sys.account.captchaEnabled");
-        if (StringUtils.isNull(captchaEnabled)) {
-            return true; // 默认开启
+        if (StringUtils.isEmpty(captchaEnabled)) {
+            return true;
         }
-        return "true".equals(captchaEnabled);
+        return Convert.toBool(captchaEnabled);
     }
     
     /**
@@ -613,12 +673,9 @@ public class SysConfigServiceImpl implements ISysConfigService {
      */
     @Override
     public void loadingConfigCache() {
-        List<SysConfig> configList = configMapper.selectConfigList(new SysConfig());
-        for (SysConfig config : configList) {
-            redisTemplate.opsForValue().set(
-                getCacheKey(config.getConfigKey()), 
-                config.getConfigValue()
-            );
+        List<SysConfig> configsList = configMapper.selectConfigList(new SysConfig());
+        for (SysConfig config : configsList) {
+            redisCache.setCacheObject(getCacheKey(config.getConfigKey()), config.getConfigValue());
         }
     }
     
@@ -627,10 +684,8 @@ public class SysConfigServiceImpl implements ISysConfigService {
      */
     @Override
     public void clearConfigCache() {
-        Set<String> keys = redisTemplate.keys("sys_config:*");
-        if (CollectionUtils.isNotEmpty(keys)) {
-            redisTemplate.delete(keys);
-        }
+        Collection<String> keys = redisCache.keys(CacheConstants.SYS_CONFIG_KEY + "*");
+        redisCache.deleteObject(keys);
     }
     
     /**
@@ -640,6 +695,49 @@ public class SysConfigServiceImpl implements ISysConfigService {
     public void resetConfigCache() {
         clearConfigCache();
         loadingConfigCache();
+    }
+    
+    /**
+     * 新增参数配置（同步更新缓存）
+     */
+    @Override
+    public int insertConfig(SysConfig config) {
+        int row = configMapper.insertConfig(config);
+        if (row > 0) {
+            redisCache.setCacheObject(getCacheKey(config.getConfigKey()), config.getConfigValue());
+        }
+        return row;
+    }
+    
+    /**
+     * 修改参数配置（同步更新缓存）
+     */
+    @Override
+    public int updateConfig(SysConfig config) {
+        SysConfig temp = configMapper.selectConfigById(config.getConfigId());
+        if (!StringUtils.equals(temp.getConfigKey(), config.getConfigKey())) {
+            redisCache.deleteObject(getCacheKey(temp.getConfigKey()));
+        }
+        int row = configMapper.updateConfig(config);
+        if (row > 0) {
+            redisCache.setCacheObject(getCacheKey(config.getConfigKey()), config.getConfigValue());
+        }
+        return row;
+    }
+    
+    /**
+     * 批量删除参数信息（同步删除缓存）
+     */
+    @Override
+    public void deleteConfigByIds(Long[] configIds) {
+        for (Long configId : configIds) {
+            SysConfig config = selectConfigById(configId);
+            if (StringUtils.equals(UserConstants.YES, config.getConfigType())) {
+                throw new ServiceException(String.format("内置参数【%1$s】不能删除 ", config.getConfigKey()));
+            }
+            configMapper.deleteConfigById(configId);
+            redisCache.deleteObject(getCacheKey(config.getConfigKey()));
+        }
     }
     
     /**
@@ -656,63 +754,10 @@ public class SysConfigServiceImpl implements ISysConfigService {
     }
     
     /**
-     * 新增参数配置
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public int insertConfig(SysConfig config) {
-        int rows = configMapper.insertConfig(config);
-        if (rows > 0) {
-            // 同步更新缓存
-            redisTemplate.opsForValue().set(
-                getCacheKey(config.getConfigKey()), 
-                config.getConfigValue()
-            );
-        }
-        return rows;
-    }
-    
-    /**
-     * 修改参数配置
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public int updateConfig(SysConfig config) {
-        int rows = configMapper.updateConfig(config);
-        if (rows > 0) {
-            // 同步更新缓存
-            redisTemplate.opsForValue().set(
-                getCacheKey(config.getConfigKey()), 
-                config.getConfigValue()
-            );
-        }
-        return rows;
-    }
-    
-    /**
-     * 批量删除参数信息
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void deleteConfigByIds(Long[] configIds) {
-        for (Long configId : configIds) {
-            SysConfig config = selectConfigById(configId);
-            if (StringUtils.equals(config.getConfigType(), "Y")) {
-                throw new ServiceException(String.format(
-                    "%1$s内置参数不可删除", config.getConfigName()
-                ));
-            }
-            // 删除缓存
-            redisTemplate.delete(getCacheKey(config.getConfigKey()));
-        }
-        configMapper.deleteConfigByIds(configIds);
-    }
-    
-    /**
-     * 生成缓存键名
+     * 设置 cache key
      */
     private String getCacheKey(String configKey) {
-        return "sys_config:" + configKey;
+        return CacheConstants.SYS_CONFIG_KEY + configKey;
     }
 }
 ```
@@ -1101,6 +1146,399 @@ private ISysPostService postService;
 // 不推荐：使用实现类注入
 @Autowired
 private SysPostServiceImpl postService;
+```
+
+---
+
+## 补充：核心 Service 接口
+
+### ISysUserService - 用户服务接口
+
+**接口路径**: `com.ruoyi.system.service.ISysUserService`
+
+```java
+public interface ISysUserService {
+    
+    /**
+     * 根据条件分页查询用户列表
+     */
+    List<SysUser> selectUserList(SysUser user);
+    
+    /**
+     * 通过用户名查询用户
+     */
+    SysUser selectUserByUserName(String userName);
+    
+    /**
+     * 通过用户 ID 查询用户
+     */
+    SysUser selectUserById(Long userId);
+    
+    /**
+     * 根据用户 ID 查询用户所属角色组
+     */
+    String selectUserRoleGroup(String userName);
+    
+    /**
+     * 根据用户 ID 查询用户所属岗位组
+     */
+    String selectUserPostGroup(String userName);
+    
+    /**
+     * 校验用户名称是否唯一
+     */
+    boolean checkUserNameUnique(SysUser user);
+    
+    /**
+     * 校验手机号码是否唯一
+     */
+    boolean checkPhoneUnique(SysUser user);
+    
+    /**
+     * 校验邮箱是否唯一
+     */
+    boolean checkEmailUnique(SysUser user);
+    
+    /**
+     * 新增用户信息
+     */
+    int insertUser(SysUser user);
+    
+    /**
+     * 修改用户信息
+     */
+    int updateUser(SysUser user);
+    
+    /**
+     * 删除用户信息
+     */
+    int deleteUserById(Long userId);
+    
+    /**
+     * 批量删除用户信息
+     */
+    int deleteUserByIds(Long[] userIds);
+    
+    /**
+     * 保存用户和岗位关联
+     */
+    void insertUserAndPost(SysUser user);
+    
+    /**
+     * 修改用户状态
+     */
+    int updateUserStatus(SysUser user);
+}
+```
+
+### ISysRoleService - 角色服务接口
+
+**接口路径**: `com.ruoyi.system.service.ISysRoleService`
+
+```java
+public interface ISysRoleService {
+    
+    /**
+     * 根据条件分页查询角色数据
+     */
+    List<SysRole> selectRoleList(SysRole role);
+    
+    /**
+     * 根据用户 ID 查询角色列表
+     */
+    List<SysRole> selectRolesByUserId(Long userId);
+    
+    /**
+     * 根据用户 ID 查询角色权限
+     */
+    Set<String> selectRolePermissionByUserId(Long userId);
+    
+    /**
+     * 查询所有角色
+     */
+    List<SysRole> selectRoleAll();
+    
+    /**
+     * 根据用户 ID 获取角色选择框列表
+     */
+    List<Long> selectRoleListByUserId(Long userId);
+    
+    /**
+     * 通过角色 ID 查询角色
+     */
+    SysRole selectRoleById(Long roleId);
+    
+    /**
+     * 校验角色名称是否唯一
+     */
+    boolean checkRoleNameUnique(SysRole role);
+    
+    /**
+     * 校验角色权限是否唯一
+     */
+    boolean checkRoleKeyUnique(SysRole role);
+    
+    /**
+     * 通过角色 ID 查询已分配用户角色列表
+     */
+    List<SysUser> selectAllocatedList(SysUser user);
+    
+    /**
+     * 通过角色 ID 查询未分配用户角色列表
+     */
+    List<SysUser> selectUnallocatedList(SysUser user);
+    
+    /**
+     * 新增角色信息
+     */
+    int insertRole(SysRole role);
+    
+    /**
+     * 修改角色信息
+     */
+    int updateRole(SysRole role);
+    
+    /**
+     * 删除角色信息
+     */
+    int deleteRoleById(Long roleId);
+    
+    /**
+     * 批量删除角色信息
+     */
+    int deleteRoleByIds(Long[] roleIds);
+    
+    /**
+     * 批量新增角色菜单权限
+     */
+    void insertRoleMenu(SysRole role);
+    
+    /**
+     * 批量删除角色菜单权限
+     */
+    void deleteRoleMenu(SysRole role);
+}
+```
+
+### ISysMenuService - 菜单服务接口
+
+**接口路径**: `com.ruoyi.system.service.ISysMenuService`
+
+```java
+public interface ISysMenuService {
+    
+    /**
+     * 根据条件查询菜单集合
+     */
+    List<SysMenu> selectMenuList(SysMenu menu);
+    
+    /**
+     * 根据用户 ID 查询权限
+     */
+    Set<String> selectMenuPermsByUserId(Long userId);
+    
+    /**
+     * 根据用户 ID 查询菜单树信息
+     */
+    List<SysMenu> selectMenuTreeByUserId(Long userId);
+    
+    /**
+     * 查询菜单树信息
+     */
+    List<SysMenu> selectMenuTreeAll();
+    
+    /**
+     * 通过菜单 ID 查询菜单
+     */
+    SysMenu selectMenuById(Long menuId);
+    
+    /**
+     * 通过用户 ID 查询菜单
+     */
+    List<SysMenu> selectMenusByUserId(Long userId);
+    
+    /**
+     * 新增菜单信息
+     */
+    int insertMenu(SysMenu menu);
+    
+    /**
+     * 修改菜单信息
+     */
+    int updateMenu(SysMenu menu);
+    
+    /**
+     * 删除菜单信息
+     */
+    int deleteMenuById(Long menuId);
+    
+    /**
+     * 批量删除菜单信息
+     */
+    int deleteMenuByIds(Long[] menuIds);
+    
+    /**
+     * 校验菜单名称是否唯一
+     */
+    boolean checkMenuNameUnique(SysMenu menu);
+}
+```
+
+### ISysDeptService - 部门服务接口
+
+**接口路径**: `com.ruoyi.system.service.ISysDeptService`
+
+```java
+public interface ISysDeptService {
+    
+    /**
+     * 查询部门管理集合
+     */
+    List<SysDept> selectDeptList(SysDept dept);
+    
+    /**
+     * 查询部门树
+     */
+    List<SysDept> selectDeptTreeList(SysDept dept);
+    
+    /**
+     * 根据 ID 查询部门
+     */
+    SysDept selectDeptById(Long deptId);
+    
+    /**
+     * 查询部门是否存在下级
+     */
+    boolean hasChildByDeptId(Long deptId);
+    
+    /**
+     * 查询部门是否被分配
+     */
+    boolean checkDeptExistUser(Long deptId);
+    
+    /**
+     * 新增部门信息
+     */
+    int insertDept(SysDept dept);
+    
+    /**
+     * 修改部门信息
+     */
+    int updateDept(SysDept dept);
+    
+    /**
+     * 删除部门管理
+     */
+    int deleteDeptById(Long deptId);
+    
+    /**
+     * 批量删除部门管理
+     */
+    int deleteDeptByIds(Long[] deptIds);
+}
+```
+
+### ISysDictTypeService - 字典类型服务接口
+
+**接口路径**: `com.ruoyi.system.service.ISysDictTypeService`
+
+```java
+public interface ISysDictTypeService {
+    
+    /**
+     * 查询字典类型集合
+     */
+    List<SysDictType> selectDictTypeList(SysDictType dictType);
+    
+    /**
+     * 通过 ID 查询字典类型
+     */
+    SysDictType selectDictTypeById(Long dictId);
+    
+    /**
+     * 通过字典类型查询字典数据
+     */
+    List<SysDictData> selectDictDataByDictType(String dictType);
+    
+    /**
+     * 校验字典类型是否唯一
+     */
+    boolean checkDictTypeUnique(SysDictType dictType);
+    
+    /**
+     * 新增字典类型
+     */
+    int insertDictType(SysDictType dictType);
+    
+    /**
+     * 修改字典类型
+     */
+    int updateDictType(SysDictType dictType);
+    
+    /**
+     * 删除字典类型
+     */
+    int deleteDictTypeById(Long dictId);
+    
+    /**
+     * 批量删除字典类型
+     */
+    int deleteDictTypeByIds(Long[] dictIds);
+    
+    /**
+     * 加载字典缓存
+     */
+    void loadingDictCache();
+    
+    /**
+     * 清空字典缓存
+     */
+    void clearDictCache();
+}
+```
+
+### ISysDictDataService - 字典数据服务接口
+
+**接口路径**: `com.ruoyi.system.service.ISysDictDataService`
+
+```java
+public interface ISysDictDataService {
+    
+    /**
+     * 查询字典数据列表
+     */
+    List<SysDictData> selectDictDataList(SysDictData dictData);
+    
+    /**
+     * 通过 ID 查询字典数据
+     */
+    SysDictData selectDictDataById(Long dictCode);
+    
+    /**
+     * 查询字典数据
+     */
+    List<SysDictData> selectDictDataByDictType(String dictType);
+    
+    /**
+     * 新增字典数据
+     */
+    int insertDictData(SysDictData dictData);
+    
+    /**
+     * 修改字典数据
+     */
+    int updateDictData(SysDictData dictData);
+    
+    /**
+     * 删除字典数据
+     */
+    int deleteDictDataById(Long dictCode);
+    
+    /**
+     * 批量删除字典数据
+     */
+    int deleteDictDataByIds(Long[] dictCodes);
+}
 ```
 
 ---

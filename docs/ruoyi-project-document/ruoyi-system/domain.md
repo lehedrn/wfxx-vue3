@@ -67,11 +67,9 @@ public class BaseEntity implements Serializable {
 **表名**: `sys_post`
 
 ```java
-@TableName("sys_post")
-public class SysPost implements Serializable {
+public class SysPost extends BaseEntity implements Serializable {
     
     /** 岗位 ID */
-    @TableId
     private Long postId;
     
     /** 岗位编码 */
@@ -123,11 +121,9 @@ postMapper.insertPost(post);
 **表名**: `sys_config`
 
 ```java
-@TableName("sys_config")
-public class SysConfig implements Serializable {
+public class SysConfig extends BaseEntity implements Serializable {
     
     /** 参数主键 */
-    @TableId
     private Long configId;
     
     /** 参数名称 */
@@ -185,11 +181,9 @@ configMapper.updateConfig(config);
 **表名**: `sys_notice`
 
 ```java
-@TableName("sys_notice")
-public class SysNotice implements Serializable {
+public class SysNotice extends BaseEntity implements Serializable {
     
     /** 公告 ID */
-    @TableId
     private Long noticeId;
     
     /** 公告标题 */
@@ -248,12 +242,13 @@ notice.setIsRead(true);
 **表名**: `sys_notice_read`
 
 ```java
-@TableName("sys_notice_read")
-public class SysNoticeRead implements Serializable {
+/**
+ * 公告已读记录表 sys_notice_read
+ */
+public class SysNoticeRead {
     
-    /** 已读记录 ID */
-    @TableId
-    private Long noticeReadId;
+    /** 主键 */
+    private Long readId;
     
     /** 公告 ID */
     private Long noticeId;
@@ -261,8 +256,8 @@ public class SysNoticeRead implements Serializable {
     /** 用户 ID */
     private Long userId;
     
-    /** 已读状态（0 未读 1 已读） */
-    private String readStatus;
+    /** 阅读时间 */
+    private Date readTime;
 }
 ```
 
@@ -270,11 +265,15 @@ public class SysNoticeRead implements Serializable {
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| notice_read_id | BIGINT | 已读记录 ID（主键） |
+| read_id | BIGINT | 主键（主键） |
 | notice_id | BIGINT | 公告 ID |
 | user_id | BIGINT | 用户 ID |
-| read_status | CHAR | 已读状态（0 未读 1 已读） |
-| create_time | DATETIME | 阅读时间 |
+| read_time | DATETIME | 阅读时间 |
+
+**注意**: 
+- 该类不继承 BaseEntity
+- 没有 createBy、createTime 等字段
+- 没有 readStatus 字段，通过是否存在记录判断是否已读
 
 **使用示例**:
 
@@ -283,12 +282,13 @@ public class SysNoticeRead implements Serializable {
 SysNoticeRead noticeRead = new SysNoticeRead();
 noticeRead.setNoticeId(1L);
 noticeRead.setUserId(1L);
-noticeRead.setReadStatus("1");
+noticeRead.setReadTime(new Date());
 
 noticeReadMapper.insertNoticeRead(noticeRead);
 
-// 检查是否已读
-Boolean isRead = noticeReadMapper.checkNoticeRead(1L, 1L);
+// 检查是否已读（通过查询记录是否存在）
+int count = noticeReadMapper.selectIsRead(1L, 1L);
+boolean isRead = count > 0;
 ```
 
 ---
@@ -298,11 +298,9 @@ Boolean isRead = noticeReadMapper.checkNoticeRead(1L, 1L);
 **表名**: `sys_oper_log`
 
 ```java
-@TableName("sys_oper_log")
 public class SysOperLog extends BaseEntity implements Serializable {
     
     /** 日志主键 */
-    @TableId
     private Long operId;
     
     /** 模块标题 */
@@ -399,11 +397,9 @@ operLogMapper.insertOperlog(operLog);
 **表名**: `sys_logininfor`
 
 ```java
-@TableName("sys_logininfor")
-public class SysLogininfor implements Serializable {
+public class SysLogininfor extends BaseEntity implements Serializable {
     
     /** 访问 ID */
-    @TableId
     private Long infoId;
     
     /** 用户账号 */
