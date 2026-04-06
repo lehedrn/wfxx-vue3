@@ -245,15 +245,7 @@ PageHelper.orderBy(orderBy);
 
 ---
 
-## 24. DesensitizedUtil - 数据脱敏工具
-
-> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/DesensitizedUtil.java`
-
-**方法**: `password(pwd)`, `carLicense(license)`
-
----
-
-## 25. DictUtils - 字典工具
+## 24. DictUtils - 字典工具
 
 > 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/DictUtils.java`
 

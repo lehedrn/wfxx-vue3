@@ -228,7 +228,7 @@ if (SecurityUtils.hasRole("admin")) { }
 
 ---
 
-## 6. SecurityUtils - 安全服务工具类
+## 7. ServletUtils - Servlet 工具类
 
 > 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/ServletUtils.java`
 
@@ -265,45 +265,9 @@ Integer pageSize = ServletUtils.getParameterToInt("pageSize", 10);
 ServletUtils.renderString(response, JSONObject.toJSONString(result));
 ```
 
-### 获取请求参数
-```java
-String getParameter(String name)
-String getParameter(String name, String defaultValue)
-Integer getParameterToInt(String name)
-Integer getParameterToInt(String name, Integer defaultValue)
-Boolean getParameterToBool(String name)
-Boolean getParameterToBool(String name, Boolean defaultValue)
-Map<String, String[]> getParams(ServletRequest request)
-Map<String, String> getParamMap(ServletRequest request)
-```
-
-**使用示例**:
-```java
-String pageNum = ServletUtils.getParameter("pageNum", "1");
-Integer pageSize = ServletUtils.getParameterToInt("pageSize", 10);
-Boolean flag = ServletUtils.getParameterToBool("flag", false);
-```
-
-### 响应处理
-```java
-void renderString(HttpServletResponse response, String string)
-```
-
-**使用示例**:
-```java
-// 返回 JSON
-ServletUtils.renderString(response, JSONObject.toJSONString(result));
-```
-
-### 请求判断
-`isAjaxRequest(request)`
-
-### URL 编解码
-`urlEncode(str)`, `urlDecode(str)`
-
 ---
 
-## 7. Threads - 线程工具类
+## 8. Threads - 线程工具类
 
 > 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/Threads.java`
 
@@ -316,7 +280,7 @@ ServletUtils.renderString(response, JSONObject.toJSONString(result));
 
 ---
 
-## 8. LogUtils - 日志工具类
+## 9. LogUtils - 日志工具类
 
 > 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/LogUtils.java`
 
@@ -328,7 +292,7 @@ ServletUtils.renderString(response, JSONObject.toJSONString(result));
 
 ---
 
-## 9. MessageUtils - 消息工具类
+## 10. MessageUtils - 消息工具类
 
 > 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/MessageUtils.java`
 
@@ -340,7 +304,7 @@ ServletUtils.renderString(response, JSONObject.toJSONString(result));
 
 ---
 
-## 10. DesensitizedUtil - 数据脱敏工具
+## 11. DesensitizedUtil - 数据脱敏工具
 
 > 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/DesensitizedUtil.java`
 
