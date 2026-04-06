@@ -323,9 +323,8 @@ POST /login
 
 | 接口 | 路径 | 权限 | 说明 |
 |------|------|------|------|
-| 在线用户列表 | `GET /list` | monitor:online:list | 查询在线用户列表 |
-| 强退用户 | `POST /forceLogout` | monitor:online:forceLogout | 强制退出在线用户 |
-| 批量强退 | `POST /batchForceLogout` | monitor:online:forceLogout | 批量强制退出用户 |
+| 在线用户列表 | `GET /list` | monitor:online:list | 查询在线用户列表（支持按 IP/用户名筛选） |
+| 强退用户 | `DELETE /{tokenId}` | monitor:online:forceLogout | 强制退出指定在线用户 |
 
 ---
 
@@ -333,15 +332,17 @@ POST /login
 
 ### TestController - Swagger 测试
 
+**源码**: [`TestController.java`](../../ruoyi-admin/src/main/java/com/ruoyi/web/controller/tool/TestController.java)
+
 **路径**: `/test/user`
 
-| 接口 | 路径 | 权限 | 说明 |
+| 接口 | 路径 | 方法 | 说明 |
 |------|------|------|------|
-| 测试用户列表 | `GET /list` | - | 查询测试用户列表（Swagger 示例） |
-| 测试用户详情 | `GET /{userId}` | - | 获取测试用户详细信息 |
-| 新增测试用户 | `POST` | - | 创建测试用户 |
-| 修改测试用户 | `PUT` | - | 更新测试用户信息 |
-| 删除测试用户 | `DELETE /{userIds}` | - | 删除测试用户 |
+| 测试用户列表 | `GET /list` | GET | 查询测试用户列表（Swagger 示例） |
+| 测试用户详情 | `GET /{userId}` | GET | 获取测试用户详细信息 |
+| 新增测试用户 | `POST /save` | POST | 创建测试用户 |
+| 修改测试用户 | `PUT /update` | PUT | 更新测试用户信息 |
+| 删除测试用户 | `DELETE /{userId}` | DELETE | 删除测试用户 |
 
 ---
 
