@@ -117,7 +117,7 @@ boolean isMatched = IpUtils.isMatchedIp("192.168.1.*", "192.168.1.100");  // tru
 
 ---
 
-## 16-1. UserAgentUtils - 用户代理工具类
+## 16.1. UserAgentUtils - 用户代理工具类
 
 > 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/http/UserAgentUtils.java`
 
