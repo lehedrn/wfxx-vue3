@@ -51,117 +51,209 @@ public @interface Log {
      * 是否保存响应的参数
      */
     boolean isSaveResponseData() default false;
+    
+    /**
+     * 排除的参数名
+     */
+    String[] excludeParamNames() default {};
 }
 ```
 
 **核心实现**:
 
 ```java
-@Component
 @Aspect
+@Component
 public class LogAspect {
     
     private static final Logger log = LoggerFactory.getLogger(LogAspect.class);
     
-    @Autowired
-    private RedisCache redisCache;
+    /** 排除敏感属性字段 */
+    public static final String[] EXCLUDE_PROPERTIES = { 
+        "password", "oldPassword", "newPassword", "confirmPassword" 
+    };
     
-    // 排除的操作
-    private static final Set<String> EXCLUDE_OPERATIONS = Sets.newHashSet(
-        "新增", "修改", "删除"
-    );
+    /** 计算操作消耗时间 */
+    private static final ThreadLocal<Long> TIME_THREADLOCAL = 
+        new NamedThreadLocal<Long>("Cost Time");
     
     /**
-     * 处理业务方法
+     * 处理请求前执行 - 记录开始时间
      */
-    @Around("@annotation(controllerLog)")
-    public Object around(ProceedingJoinPoint point, Log controllerLog) throws Throwable {
-        long startTime = System.currentTimeMillis();
-        Object result = null;
-        
-        // 1. 构建操作日志对象
-        OperLog operLog = new OperLog();
-        try {
-            // 2. 设置基本信息
-            handleRecord(point, controllerLog, operLog);
-            
-            // 3. 执行目标方法
-            result = point.proceed();
-            
-            // 4. 设置执行状态
-            operLog.setBusinessStatus(BusinessStatus.SUCCESS.getCode());
-            
-            // 5. 记录执行时间
-            long endTime = System.currentTimeMillis();
-            operLog.setOperTime(new Date());
-            operLog.setCostTime(endTime - startTime);
-            
-            // 6. 异步保存日志
-            AsyncManager.getInstance().execute(AsyncFactory.recordOper(operLog));
-            
-        } catch (Exception e) {
-            // 7. 记录异常
-            operLog.setBusinessStatus(BusinessStatus.FAIL.getCode());
-            operLog.setErrorMsg(StringUtils.substring(e.getMessage(), 0, 2000));
-            AsyncManager.getInstance().execute(AsyncFactory.recordOper(operLog));
-            throw e;
-        }
-        
-        return result;
+    @Before(value = "@annotation(controllerLog)")
+    public void doBefore(JoinPoint joinPoint, Log controllerLog) {
+        TIME_THREADLOCAL.set(System.currentTimeMillis());
     }
     
     /**
-     * 记录日志详情
+     * 处理完请求后执行
      */
-    private void handleRecord(ProceedingJoinPoint point, Log log, OperLog operLog) {
-        ServletRequestAttributes attributes = 
-            (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest request = attributes.getRequest();
-        
-        // 基本信息
-        operLog.setOperIp(IpUtils.getIpAddr(request));
-        operLog.setOperUrl(request.getRequestURI());
-        operLog.setOperLocation= AddressUtils.getRealAddressByIP(operLog.getOperIp());
-        
-        // 获取登录用户
-        String operName = SecurityUtils.getUsername();
-        if (StringUtils.isNull(operName) || "anonymous".equals(operName)) {
-            operName = "匿名用户";
+    @AfterReturning(pointcut = "@annotation(controllerLog)", returning = "jsonResult")
+    public void doAfterReturning(JoinPoint joinPoint, Log controllerLog, Object jsonResult) {
+        handleLog(joinPoint, controllerLog, null, jsonResult);
+    }
+    
+    /**
+     * 拦截异常操作
+     */
+    @AfterThrowing(value = "@annotation(controllerLog)", throwing = "e")
+    public void doAfterThrowing(JoinPoint joinPoint, Log controllerLog, Exception e) {
+        handleLog(joinPoint, controllerLog, e, null);
+    }
+    
+    /**
+     * 处理日志
+     */
+    protected void handleLog(final JoinPoint joinPoint, Log controllerLog, 
+                            final Exception e, Object jsonResult) {
+        try {
+            // 获取当前登录用户
+            LoginUser loginUser = SecurityUtils.getLoginUser();
+            
+            // 创建操作日志对象
+            SysOperLog operLog = new SysOperLog();
+            operLog.setStatus(BusinessStatus.SUCCESS.ordinal());
+            
+            // 设置 IP 和 URL
+            String ip = IpUtils.getIpAddr();
+            operLog.setOperIp(ip);
+            operLog.setOperUrl(StringUtils.substring(
+                ServletUtils.getRequest().getRequestURI(), 0, 255
+            ));
+            
+            // 设置用户信息
+            if (loginUser != null) {
+                operLog.setOperName(loginUser.getUsername());
+                SysUser currentUser = loginUser.getUser();
+                if (StringUtils.isNotNull(currentUser) && 
+                    StringUtils.isNotNull(currentUser.getDept())) {
+                    operLog.setDeptName(currentUser.getDept().getDeptName());
+                }
+            }
+            
+            // 设置异常信息
+            if (e != null) {
+                operLog.setStatus(BusinessStatus.FAIL.ordinal());
+                operLog.setErrorMsg(StringUtils.substring(
+                    Convert.toStr(e.getMessage(), ExceptionUtil.getExceptionMessage(e)), 
+                    0, 2000
+                ));
+            }
+            
+            // 设置方法名称和请求方式
+            String className = joinPoint.getTarget().getClass().getName();
+            String methodName = joinPoint.getSignature().getName();
+            operLog.setMethod(className + "." + methodName + "()");
+            operLog.setRequestMethod(ServletUtils.getRequest().getMethod());
+            
+            // 处理注解参数
+            getControllerMethodDescription(joinPoint, controllerLog, operLog, jsonResult);
+            
+            // 设置消耗时间
+            operLog.setCostTime(System.currentTimeMillis() - TIME_THREADLOCAL.get());
+            
+            // 异步保存数据库
+            AsyncManager.me().execute(AsyncFactory.recordOper(operLog));
+            
+        } catch (Exception exp) {
+            log.error("异常信息:{}", exp.getMessage());
+            exp.printStackTrace();
+        } finally {
+            TIME_THREADLOCAL.remove();
         }
-        operLog.setOperName(operName);
-        
-        // 部门信息
-        Long deptId = SecurityUtils.getDeptId();
-        operLog.setDeptId(deptId);
-        
-        // 方法信息
-        String className = point.getTarget().getClass().getName();
-        String methodName = point.getSignature().getName();
-        operLog.setMethod(className + "." + methodName + "()");
-        
-        // 注解信息
-        operLog.setTitle(log.title());
+    }
+    
+    /**
+     * 获取注解描述信息
+     */
+    public void getControllerMethodDescription(JoinPoint joinPoint, Log log, 
+                                               SysOperLog operLog, Object jsonResult) {
+        // 设置 action 动作
         operLog.setBusinessType(log.businessType().ordinal());
+        // 设置标题
+        operLog.setTitle(log.title());
+        // 设置操作人类别
         operLog.setOperatorType(log.operatorType().ordinal());
         
-        // 请求参数
+        // 保存请求参数
         if (log.isSaveRequestData()) {
-            Map<String, String> params = WebUtils.getParams(request);
-            if (MapUtils.isNotEmpty(params)) {
-                String paramString = JSONObject.toJSONString(params);
-                operLog.setOperParam(StringUtils.substring(paramString, 0, 2000));
-            }
+            setRequestValue(joinPoint, operLog, log.excludeParamNames());
         }
         
-        // JSON 请求体
-        Object arg = point.getArgs()[0];
-        if (arg instanceof JSONObject) {
-            String paramString = ((JSONObject) arg).toString();
-            operLog.setOperParam(StringUtils.substring(paramString, 0, 2000));
+        // 保存响应参数
+        if (log.isSaveResponseData() && StringUtils.isNotNull(jsonResult)) {
+            operLog.setJsonResult(StringUtils.substring(
+                JSON.toJSONString(jsonResult), 0, 2000
+            ));
         }
+    }
+    
+    /**
+     * 获取请求参数
+     */
+    private void setRequestValue(JoinPoint joinPoint, SysOperLog operLog, 
+                                String[] excludeParamNames) {
+        String requestMethod = operLog.getRequestMethod();
+        Map<?, ?> paramsMap = ServletUtils.getParamMap(ServletUtils.getRequest());
+        
+        if (StringUtils.isEmpty(paramsMap) && 
+            StringUtils.equalsAny(requestMethod, 
+                HttpMethod.PUT.name(), HttpMethod.POST.name(), HttpMethod.DELETE.name())) {
+            // PUT/POST/DELETE 请求从参数数组获取
+            String params = argsArrayToString(joinPoint.getArgs(), excludeParamNames);
+            operLog.setOperParam(params);
+        } else {
+            // GET 请求从参数 Map 获取
+            operLog.setOperParam(StringUtils.substring(
+                JSON.toJSONString(paramsMap, excludePropertyPreFilter(excludeParamNames)), 
+                0, 2000
+            ));
+        }
+    }
+    
+    /**
+     * 参数数组转字符串
+     */
+    private String argsArrayToString(Object[] paramsArray, String[] excludeParamNames) {
+        StringBuilder params = new StringBuilder();
+        if (paramsArray != null && paramsArray.length > 0) {
+            for (Object o : paramsArray) {
+                if (StringUtils.isNotNull(o) && !isFilterObject(o)) {
+                    String jsonObj = JSON.toJSONString(o, excludePropertyPreFilter(excludeParamNames));
+                    params.append(jsonObj).append(" ");
+                }
+            }
+        }
+        return params.toString();
+    }
+    
+    /**
+     * 判断是否需要过滤的对象
+     */
+    public boolean isFilterObject(final Object o) {
+        // 过滤 MultipartFile、HttpServletRequest、HttpServletResponse、BindingResult
+        return o instanceof MultipartFile || 
+               o instanceof HttpServletRequest || 
+               o instanceof HttpServletResponse ||
+               o instanceof BindingResult;
+    }
+    
+    /**
+     * 忽略敏感属性
+     */
+    public PropertyPreExcludeFilter excludePropertyPreFilter(String[] excludeParamNames) {
+        return new PropertyPreExcludeFilter().addExcludes(
+            ArrayUtils.addAll(EXCLUDE_PROPERTIES, excludeParamNames)
+        );
     }
 }
 ```
+
+**通知类型**:
+
+- `@Before`: 请求前执行，记录开始时间
+- `@AfterReturning`: 请求成功后执行，记录成功日志
+- `@AfterThrowing`: 请求异常后执行，记录失败日志
 
 **使用示例**:
 
@@ -180,32 +272,23 @@ public class SysUserController {
     }
     
     /**
-     * 修改用户
+     * 修改用户（保存请求和响应参数）
      */
-    @Log(title = "用户管理", businessType = BusinessType.UPDATE)
+    @Log(title = "用户管理", businessType = BusinessType.UPDATE, 
+         isSaveRequestData = true, isSaveResponseData = true)
     @PutMapping
     public AjaxResult edit(@RequestBody SysUser user) {
         return toAjax(userService.updateUser(user));
     }
     
     /**
-     * 删除用户
+     * 删除用户（排除 password 参数）
      */
-    @Log(title = "用户管理", businessType = BusinessType.DELETE)
+    @Log(title = "用户管理", businessType = BusinessType.DELETE, 
+         excludeParamNames = {"password"})
     @DeleteMapping("/{userIds}")
     public AjaxResult remove(@PathVariable Long[] userIds) {
         return toAjax(userService.deleteUserByIds(userIds));
-    }
-    
-    /**
-     * 导出用户
-     */
-    @Log(title = "用户管理", businessType = BusinessType.EXPORT)
-    @PostMapping("/export")
-    public void export(HttpServletResponse response, SysUser user) {
-        List<SysUser> list = userService.selectUserList(user);
-        ExcelUtil<SysUser> util = new ExcelUtil<>(SysUser.class);
-        util.exportExcel(response, list, "用户数据");
     }
 }
 ```
@@ -214,7 +297,7 @@ public class SysUserController {
 
 ## 2. DataScopeAspect - 数据权限切面
 
-**用途**: 根据用户角色自动注入数据范围过滤 SQL
+**用途**: 根据用户角色自动注入数据范围过滤 SQL 到方法参数的 params 中
 
 **注解定义**:
 
@@ -224,159 +307,204 @@ public class SysUserController {
 @Documented
 public @interface DataScope {
     /**
-     * department 部门的别名（用于 SQL 拼接）
+     * 部门别名（用于 SQL 拼接）
      */
     String deptAlias() default "";
     
     /**
-     * user 用户的别名
+     * 用户别名
      */
     String userAlias() default "";
     
     /**
-     * 当前方法是否忽略其他方法的权限
+     * 用户名字段
      */
-    boolean excludeSelf() default false;
+    String userField() default "";
+    
+    /**
+     * 部门名字段
+     */
+    String deptField() default "";
+    
+    /**
+     * 权限字符（用于过滤角色）
+     */
+    String permission() default "";
 }
 ```
 
 **核心实现**:
 
 ```java
-@Component
 @Aspect
+@Component
 public class DataScopeAspect {
     
-    @Autowired
-    private PermissionContextHolder permissionContextHolder;
+    /**
+     * 数据权限过滤关键字
+     */
+    public static final String DATA_SCOPE = "dataScope";
     
     /**
-     * 数据权限处理
+     * 在方法执行前处理数据权限
      */
     @Before("@annotation(controllerDataScope)")
-    public void doBefore(JoinPoint point, DataScope controllerDataScope) {
-        // 1. 获取当前用户
-        LoginUser user = SecurityUtils.getLoginUser();
-        if (user == null) {
-            return;
+    public void doBefore(JoinPoint point, DataScope controllerDataScope) throws Throwable {
+        clearDataScope(point);
+        handleDataScope(point, controllerDataScope);
+    }
+    
+    /**
+     * 清空 dataScope 参数，防止 SQL 注入
+     */
+    private void clearDataScope(final JoinPoint joinPoint) {
+        Object params = joinPoint.getArgs()[0];
+        if (StringUtils.isNotNull(params) && params instanceof BaseEntity) {
+            BaseEntity baseEntity = (BaseEntity) params;
+            baseEntity.getParams().put(DATA_SCOPE, "");
         }
-        
-        SysUser currentUser = user.getUser();
-        if (currentUser == null) {
-            return;
+    }
+    
+    /**
+     * 处理数据权限
+     */
+    protected void handleDataScope(final JoinPoint joinPoint, DataScope controllerDataScope) {
+        // 获取当前用户
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        if (StringUtils.isNotNull(loginUser)) {
+            SysUser currentUser = loginUser.getUser();
+            // 超级管理员不过滤数据
+            if (StringUtils.isNotNull(currentUser) && !currentUser.isAdmin()) {
+                // 获取权限字符，默认为 PermissionContextHolder 中的值
+                String permission = StringUtils.defaultIfEmpty(
+                    controllerDataScope.permission(), 
+                    PermissionContextHolder.getContext()
+                );
+                dataScopeFilter(
+                    joinPoint, 
+                    currentUser, 
+                    controllerDataScope.userAlias(), 
+                    controllerDataScope.deptAlias(), 
+                    controllerDataScope.userField(), 
+                    controllerDataScope.deptField(), 
+                    permission
+                );
+            }
         }
+    }
+    
+    /**
+     * 数据范围过滤核心方法
+     */
+    public static void dataScopeFilter(
+            JoinPoint joinPoint, 
+            SysUser user, 
+            String userAlias, 
+            String deptAlias, 
+            String userField, 
+            String deptField, 
+            String permission) {
         
-        // 2. 管理员拥有全部数据权限
-        if (currentUser.isAdmin()) {
-            return;
-        }
+        StringBuilder sqlString = new StringBuilder();
+        List<String> conditions = new ArrayList<String>();
+        List<String> scopeCustomIds = new ArrayList<String>();
         
-        // 3. 构建数据权限 SQL
-        StringBuilder dataScope = new StringBuilder();
-        dataScope.append(" AND ( ");
+        // 先收集所有自定义数据权限的角色 ID
+        user.getRoles().forEach(role -> {
+            if (Constants.Dept.DATA_SCOPE_CUSTOM.equals(role.getDataScope()) 
+                    && StringUtils.equals(role.getStatus(), UserConstants.ROLE_NORMAL) 
+                    && (StringUtils.isEmpty(permission) 
+                        || StringUtils.containsAny(role.getPermissions(), Convert.toStrArray(permission)))) {
+                scopeCustomIds.add(Convert.toStr(role.getRoleId()));
+            }
+        });
         
-        // 4. 获取用户角色
-        List<SysRole> roles = currentUser.getRoles();
-        if (CollectionUtils.isEmpty(roles)) {
-            // 无角色，只能看到自己的数据
-            dataScope.append(" 1=0 ");
-        } else {
-            // 5. 拼接各角色的数据范围
-            List<String> scopeSqlList = new ArrayList<>();
-            for (SysRole role : roles) {
-                String dataScopeStr = getDataScopeString(role, controllerDataScope, currentUser);
-                if (StringUtils.hasText(dataScopeStr)) {
-                    scopeSqlList.add(dataScopeStr);
-                }
+        // 遍历角色，拼接数据权限 SQL
+        for (SysRole role : user.getRoles()) {
+            String dataScope = role.getDataScope();
+            
+            // 已处理过的数据范围或禁用的角色，跳过
+            if (conditions.contains(dataScope) || StringUtils.equals(role.getStatus(), UserConstants.ROLE_DISABLE)) {
+                continue;
             }
             
-            if (scopeSqlList.isEmpty()) {
-                dataScope.append(" 1=0 ");
-            } else {
-                dataScope.append(StringUtils.join(scopeSqlList, " OR "));
+            // 权限字符不匹配，跳过
+            if (StringUtils.isNotEmpty(permission) && !StringUtils.containsAny(role.getPermissions(), Convert.toStrArray(permission))) {
+                continue;
             }
-        }
-        
-        dataScope.append(" ) ");
-        
-        // 6. 设置到上下文，供 Mapper 使用
-        permissionContextHolder.setContext(dataScope.toString());
-    }
-    
-    /**
-     * 获取单个角色的数据范围 SQL
-     */
-    private String getDataScopeString(SysRole role, DataScope dataScope, SysUser user) {
-        StringBuilder sql = new StringBuilder();
-        
-        switch (role.getDataScope()) {
-            case DATA_SCOPE_ALL:
-                // 全部数据权限，不过滤
-                return "";
-                
-            case DATA_SCOPE_CUSTOM:
+            
+            if (Constants.Dept.DATA_SCOPE_ALL.equals(dataScope)) {
+                // 全部数据权限，清空 SQL，直接返回
+                sqlString = new StringBuilder();
+                conditions.add(dataScope);
+                break;
+            }
+            else if (Constants.Dept.DATA_SCOPE_CUSTOM.equals(dataScope)) {
                 // 自定义数据权限
-                sql.append(" ( ");
-                sql.append(String.format(
-                    "%s.dept_id IN ( SELECT dept_id FROM sys_role_dept WHERE role_id = %s ) ",
-                    dataScope.deptAlias(), role.getRoleId()
-                ));
-                
-                // 如果排除自己，加上部门过滤
-                if (dataScope.excludeSelf()) {
-                    sql.append(String.format(
-                        " OR %s.dept_id = %s ",
-                        dataScope.deptAlias(), user.getDeptId()
+                if (scopeCustomIds.size() > 1) {
+                    // 多个自定数据权限使用 in 查询
+                    sqlString.append(StringUtils.format(
+                        " OR {}.{} IN ( SELECT dept_id FROM sys_role_dept WHERE role_id in ({}) ) ", 
+                        deptAlias, deptField, String.join(",", scopeCustomIds)
+                    ));
+                } else {
+                    sqlString.append(StringUtils.format(
+                        " OR {}.{} IN ( SELECT dept_id FROM sys_role_dept WHERE role_id = {} ) ", 
+                        deptAlias, deptField, role.getRoleId()
                     ));
                 }
-                sql.append(" ) ");
-                break;
-                
-            case DATA_SCOPE_DEPT:
+            }
+            else if (Constants.Dept.DATA_SCOPE_DEPT.equals(dataScope)) {
                 // 本部门数据权限
-                sql.append(String.format(
-                    "%s.dept_id = %s ",
-                    dataScope.deptAlias(), user.getDeptId()
+                sqlString.append(StringUtils.format(
+                    " OR {}.{} = {} ", deptAlias, deptField, user.getDeptId()
                 ));
-                break;
-                
-            case DATA_SCOPE_DEPT_AND_CHILD:
-                // 本部门及子部门数据权限
-                sql.append(String.format(
-                    "%s.dept_id IN ( %s ) ",
-                    dataScope.deptAlias(),
-                    StringUtils.join(getDeptChildren(user.getDeptId()), ",")
+            }
+            else if (Constants.Dept.DATA_SCOPE_DEPT_AND_CHILD.equals(dataScope)) {
+                // 本部门及子部门数据权限（使用 find_in_set 查询祖先）
+                sqlString.append(StringUtils.format(
+                    " OR {}.{} IN ( SELECT dept_id FROM sys_dept WHERE dept_id = {} or find_in_set( {} , ancestors ) )", 
+                    deptAlias, deptField, user.getDeptId(), user.getDeptId()
                 ));
-                break;
-                
-            case DATA_SCOPE_SELF:
-            default:
+            }
+            else if (Constants.Dept.DATA_SCOPE_SELF.equals(dataScope)) {
                 // 仅本人数据权限
-                sql.append(String.format(
-                    "%s.user_id = %s ",
-                    dataScope.userAlias(), user.getUserId()
-                ));
-                break;
+                if (StringUtils.isNotBlank(userAlias)) {
+                    sqlString.append(StringUtils.format(
+                        " OR {}.{} = {} ", userAlias, userField, user.getUserId()
+                    ));
+                } else {
+                    // 无 userAlias 别名则不查询任何数据
+                    sqlString.append(StringUtils.format(
+                        " OR {}.{} = 0 ", deptAlias, deptField
+                    ));
+                }
+            }
+            conditions.add(dataScope);
         }
         
-        return sql.toString();
-    }
-    
-    /**
-     * 获取部门的所有子部门 ID
-     */
-    private List<Long> getDeptChildren(Long deptId) {
-        // 递归查询子部门
-        List<SysDept> depts = deptMapper.selectDeptChildrenById(deptId);
-        return depts.stream().map(SysDept::getDeptId).collect(Collectors.toList());
+        // 角色都不包含传递过来的权限字符，不查询任何数据
+        if (StringUtils.isEmpty(conditions)) {
+            sqlString.append(StringUtils.format(" OR {}.{} = 0 ", deptAlias, deptField));
+        }
+        
+        // 将 SQL 拼接到 params.dataScope
+        if (StringUtils.isNotBlank(sqlString.toString())) {
+            Object params = joinPoint.getArgs()[0];
+            if (StringUtils.isNotNull(params) && params instanceof BaseEntity) {
+                BaseEntity baseEntity = (BaseEntity) params;
+                // 去掉开头的 " OR "（4 个字符）
+                baseEntity.getParams().put(DATA_SCOPE, " AND (" + sqlString.substring(4) + ")");
+            }
+        }
     }
 }
 ```
 
-**数据范围枚举**:
+**数据范围常量**:
 
 ```java
-public interface DataScopeType {
+public interface Dept {
     /**
      * 全部数据权限
      */
@@ -415,7 +543,7 @@ public interface DataScopeType {
     left join sys_dept d on u.dept_id = d.dept_id
     where u.del_flag = '0'
     <!-- 数据权限过滤 -->
-    $dataScope
+    ${params.dataScope}
     <if test="userName != null and userName != ''">
         AND u.user_name like concat('%', #{userName}, '%')
     </if>
@@ -433,10 +561,26 @@ public class UserServiceImpl implements SysUserService {
     
     /**
      * 查询用户列表 - 自动应用数据权限
+     * @DataScope 参数：
+     * - deptAlias: 部门表别名
+     * - userAlias: 用户表别名
+     * - permission: 权限字符（可选，为空则使用 PermissionContextHolder 中的值）
      */
     @DataScope(deptAlias = "d", userAlias = "u")
     @Override
     public List<SysUser> selectUserList(SysUser user) {
+        // 参数 user 会被注入 dataScope SQL
+        // user.getParams().get("dataScope") 包含类似：
+        // " AND (d.dept_id = 100 OR d.dept_id IN (SELECT dept_id FROM sys_role_dept WHERE role_id = 2))"
+        return userMapper.selectUserList(user);
+    }
+    
+    /**
+     * 带权限字符的数据权限过滤
+     * 只过滤包含 system:user:list 权限的角色
+     */
+    @DataScope(deptAlias = "d", userAlias = "u", permission = "system:user:list")
+    public List<SysUser> selectUserListByPermission(SysUser user) {
         return userMapper.selectUserList(user);
     }
 }
@@ -617,77 +761,87 @@ public enum LimitType {
 **核心实现**:
 
 ```java
-@Component
 @Aspect
+@Component
 public class RateLimiterAspect {
     
+    private static final Logger log = LoggerFactory.getLogger(RateLimiterAspect.class);
+    
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisTemplate<Object, Object> redisTemplate;
+    
+    @Autowired
+    private RedisScript<Long> limitScript;
     
     /**
-     * 限流处理
+     * 限流处理（@Before 通知）
      */
-    @Around("@annotation(rateLimiter)")
-    public Object around(ProceedingJoinPoint point, RateLimiter rateLimiter) throws Throwable {
+    @Before("@annotation(rateLimiter)")
+    public void doBefore(JoinPoint point, RateLimiter rateLimiter) throws Throwable {
+        int time = rateLimiter.time();
+        int count = rateLimiter.count();
+        
         // 1. 生成 Redis Key
-        String key = getKey(rateLimiter, point);
+        String combineKey = getCombineKey(rateLimiter, point);
+        List<Object> keys = Collections.singletonList(combineKey);
         
-        // 2. 执行 Lua 脚本限流
-        Long count = executeLuaScript(key, rateLimiter.time(), rateLimiter.count());
-        
-        // 3. 检查是否超过限流
-        if (count != null && count > rateLimiter.count()) {
-            // 4. 超过限流次数，抛出异常
-            throw new ServiceException(rateLimiter.message());
+        try {
+            // 2. 执行 Lua 脚本限流
+            Long number = redisTemplate.execute(limitScript, keys, count, time);
+            
+            // 3. 检查是否超过限流次数
+            if (StringUtils.isNull(number) || number.intValue() > count) {
+                throw new ServiceException("访问过于频繁，请稍候再试");
+            }
+            
+            log.info("限制请求'{}',当前请求'{}',缓存 key'{}'", count, number.intValue(), combineKey);
+        } catch (ServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("服务器限流异常，请稍候再试");
         }
-        
-        // 5. 执行目标方法
-        return point.proceed();
     }
     
     /**
      * 生成限流 Key
      */
-    private String getKey(RateLimiter rateLimiter, ProceedingJoinPoint point) {
-        StringBuilder key = new StringBuilder();
-        key.append(CacheConstants.RATE_LIMIT_KEY);
-        key.append(":");
+    public String getCombineKey(RateLimiter rateLimiter, JoinPoint point) {
+        StringBuffer stringBuffer = new StringBuffer(rateLimiter.key());
         
-        // 方法签名
-        String methodName = point.getSignature().getName();
-        key.append(methodName);
-        
-        // 根据限流类型添加维度
+        // 根据限流类型添加 IP
         if (rateLimiter.limitType() == LimitType.IP) {
-            // 按 IP 限流
-            ServletRequestAttributes attributes = 
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            HttpServletRequest request = attributes.getRequest();
-            key.append(":");
-            key.append(IpUtils.getIpAddr(request));
+            stringBuffer.append(IpUtils.getIpAddr()).append("-");
         }
         
-        return key.toString();
-    }
-    
-    /**
-     * 执行 Lua 脚本
-     * 返回当前访问次数
-     */
-    private Long executeLuaScript(String key, int time, int count) {
-        String script = 
-            "local key = KEYS[1] " +
-            "local limit = tonumber(ARGV[1]) " +
-            "local expire = tonumber(ARGV[2]) " +
-            "local current = redis.call('INCR', key) " +
-            "if current == 1 then " +
-            "    redis.call('EXPIRE', key, expire) " +
-            "end " +
-            "return current";
+        // 添加方法签名
+        MethodSignature signature = (MethodSignature) point.getSignature();
+        Method method = signature.getMethod();
+        Class<?> targetClass = method.getDeclaringClass();
+        stringBuffer.append(targetClass.getName()).append("-").append(method.getName());
         
-        RedisScript<Long> redisScript = new DefaultRedisScript<>(script, Long.class);
-        return redisTemplate.execute(redisScript, Collections.singletonList(key), count, time);
+        return stringBuffer.toString();
     }
+}
+```
+
+**Lua 脚本配置** (在 RedisConfig 中配置):
+
+```java
+@Bean
+public RedisScript<Long> limitScript() {
+    DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
+    redisScript.setScriptText(
+        "local key = KEYS[1] " +
+        "local limit = tonumber(ARGV[1]) " +
+        "local expire = tonumber(ARGV[2]) " +
+        "local current = redis.call('INCR', key) " +
+        "if current == 1 then " +
+        "    redis.call('EXPIRE', key, expire) " +
+        "end " +
+        "return current"
+    );
+    redisScript.setResultType(Long.class);
+    return redisScript;
 }
 ```
 
@@ -695,8 +849,8 @@ public class RateLimiterAspect {
 
 ```lua
 -- KEYS[1]: 限流 Key
--- ARGV[1]: 限流次数
--- ARGV[2]: 限流时间 (秒)
+-- ARGV[1]: 限流次数 (count)
+-- ARGV[2]: 限流时间 (time/秒)
 
 local key = KEYS[1]
 local limit = tonumber(ARGV[1])
@@ -722,33 +876,59 @@ return current
 public class SmsController {
     
     /**
-     * 发送短信 - 每个 IP 60 秒内最多 10 次
+     * 发送短信验证码 - 同一接口 60 秒内最多 5 次
+     */
+    @RateLimiter(time = 60, count = 5, message = "发送过于频繁，请稍后再试")
+    @PostMapping("/send")
+    public AjaxResult sendCode(@RequestParam String phone) {
+        return toAjax(smsService.send(phone));
+    }
+    
+    /**
+     * 图片验证码 - 同一 IP 60 秒内最多 10 次
      */
     @RateLimiter(time = 60, count = 10, limitType = LimitType.IP)
-    @PostMapping("/send")
-    public AjaxResult sendSms(@RequestParam String phone) {
-        smsService.sendVerifyCode(phone);
-        return AjaxResult.success("发送成功");
+    @GetMapping("/captcha")
+    public AjaxResult getCaptcha() {
+        return AjaxResult.success(captchaService.create());
     }
     
     /**
-     * 公共查询接口 - 全局限流 60 秒 100 次
+     * 登录接口 - 同一接口 10 秒内最多 3 次
      */
-    @RateLimiter(time = 60, count = 100, limitType = LimitType.DEFAULT)
-    @GetMapping("/query")
-    public AjaxResult query() {
-        return AjaxResult.success(dataService.query());
-    }
-    
-    /**
-     * 登录接口 - 防止暴力破解，每个 IP 60 秒最多 5 次
-     */
-    @RateLimiter(time = 60, count = 5, limitType = LimitType.IP, message = "登录太频繁，请稍后再试")
+    @RateLimiter(time = 10, count = 3)
     @PostMapping("/login")
     public AjaxResult login(@RequestBody LoginBody loginBody) {
-        return loginService.login(loginBody);
+        return AjaxResult.success(authService.login(loginBody));
     }
 }
+```
+
+**执行流程**:
+
+```
+请求 → @Before("@annotation(rateLimiter)")
+        ↓
+生成 combineKey (key + IP(可选) + 方法签名)
+        ↓
+执行 Lua 脚本 (INCR + EXPIRE)
+        ↓
+获取当前访问次数 number
+        ↓
+number > count → 抛出 ServiceException
+number <= count → 放行
+        ↓
+执行目标方法
+```
+
+**Redis Key 示例**:
+
+```
+# 全局限流（不限 IP）
+rate_limit:test.com.service.UserService-getUserById
+
+# IP 限流
+rate_limit:192.168.1.100-test.com.service.UserService-getUserById
 ```
 
 ---

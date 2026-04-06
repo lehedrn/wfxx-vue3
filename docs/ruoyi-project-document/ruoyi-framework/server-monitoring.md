@@ -38,7 +38,6 @@ domain/server/
 **核心实现**:
 
 ```java
-@Component
 public class Server {
     
     private static final int OSHI_WAIT_SECOND = 1000;
@@ -66,181 +65,163 @@ public class Server {
     /**
      * 文件系统相关信息
      */
-    private List<SysFile> sysFiles = new ArrayList<>();
+    private List<SysFile> sysFiles = new LinkedList<SysFile>();
     
     /**
-     * 复制属性
+     * 复制属性到当前对象（核心入口方法）
+     * 调用此方法会自动填充所有服务器信息
      */
-    public void copyTo() {
-        setJvm();
-        setCpu();
-        setMem();
-        setSys();
-        setSysFiles();
+    public void copyTo() throws Exception {
+        setCpuInfo(hal.getProcessor());
+        setMemInfo(hal.getMemory());
+        setSysInfo();
+        setJvmInfo();
+        setSysFiles(si.getOperatingSystem());
     }
     
     /**
-     * 设置 JVM 信息
+     * 设置 CPU 信息（私有方法）
      */
-    private void setJvm() {
+    private void setCpuInfo(CentralProcessor processor) {
+        // 等待 1 秒获取准确的 CPU 使用率
+        long[] prevTicks = processor.getSystemCpuLoadTicks();
+        Util.sleep(OSHI_WAIT_SECOND);
+        long[] ticks = processor.getSystemCpuLoadTicks();
+        
+        // 计算各个状态的 CPU 时间
+        long nice = ticks[TickType.NICE.getIndex()] - prevTicks[TickType.NICE.getIndex()];
+        long irq = ticks[TickType.IRQ.getIndex()] - prevTicks[TickType.IRQ.getIndex()];
+        long softirq = ticks[TickType.SOFTIRQ.getIndex()] - prevTicks[TickType.SOFTIRQ.getIndex()];
+        long steal = ticks[TickType.STEAL.getIndex()] - prevTicks[TickType.STEAL.getIndex()];
+        long cSys = ticks[TickType.SYSTEM.getIndex()] - prevTicks[TickType.SYSTEM.getIndex()];
+        long user = ticks[TickType.USER.getIndex()] - prevTicks[TickType.USER.getIndex()];
+        long iowait = ticks[TickType.IOWAIT.getIndex()] - prevTicks[TickType.IOWAIT.getIndex()];
+        long idle = ticks[TickType.IDLE.getIndex()] - prevTicks[TickType.IDLE.getIndex()];
+        
+        long totalCpu = user + nice + cSys + idle + iowait + irq + softirq + steal;
+        
+        cpu.setCpuNum(processor.getLogicalProcessorCount());
+        cpu.setTotal(totalCpu);
+        cpu.setSys(cSys);
+        cpu.setUsed(user);
+        cpu.setWait(iowait);
+        cpu.setFree(idle);
+    }
+    
+    /**
+     * 设置内存信息（私有方法）
+     */
+    private void setMemInfo(GlobalMemory memory) {
+        mem.setTotal(memory.getTotal());
+        mem.setUsed(memory.getTotal() - memory.getAvailable());
+        mem.setFree(memory.getAvailable());
+    }
+    
+    /**
+     * 设置系统信息（私有方法）
+     */
+    private void setSysInfo() {
+        Properties props = System.getProperties();
+        sys.setComputerName(IpUtils.getHostName());
+        sys.setComputerIp(IpUtils.getHostIp());
+        sys.setOsName(props.getProperty("os.name"));
+        sys.setOsArch(props.getProperty("os.arch"));
+        sys.setUserDir(props.getProperty("user.dir"));
+    }
+    
+    /**
+     * 设置 JVM 信息（私有方法）
+     */
+    private void setJvmInfo() throws UnknownHostException {
+        Properties props = System.getProperties();
         jvm.setTotal(Runtime.getRuntime().totalMemory());
         jvm.setMax(Runtime.getRuntime().maxMemory());
         jvm.setFree(Runtime.getRuntime().freeMemory());
-        jvm.setVersion(System.getProperty("java.version"));
-        jvm.setHome(System.getProperty("java.home"));
-        jvm.setStartTime(new Date(ManagementFactory.getRuntimeMXBean().getStartTime()));
-        jvm.setRunTime((System.currentTimeMillis() - jvm.getStartTime().getTime()) / 1000);
-        
-        // 获取线程信息
-        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
-        jvm.setThreadCount(threadMXBean.getThreadCount());
-        
-        // 获取类加载信息
-        ClassLoadingMXBean classLoadingMXBean = ManagementFactory.getClassLoadingMXBean();
-        jvm.setClassCount(classLoadingMXBean.getLoadedClassCount());
-        
-        // 获取垃圾回收信息
-        List<GarbageCollectorMXBean> gcBeans = ManagementFactory.getGarbageCollectorMXBeans();
-        StringBuilder gcInfo = new StringBuilder();
-        for (GarbageCollectorMXBean gcBean : gcBeans) {
-            gcInfo.append(gcBean.getName()).append(", ");
-        }
-        jvm.setGcInfo(gcInfo.toString());
-        
-        // 计算使用率
-        jvm.setUsage(Arith.round(Arith.mul(
-            Arith.sub(jvm.getTotal(), jvm.getFree()), 100.0 / jvm.getTotal()
-        ), 2));
+        jvm.setVersion(props.getProperty("java.version"));
+        jvm.setHome(props.getProperty("java.home"));
     }
     
     /**
-     * 设置 CPU 信息
+     * 设置文件系统信息（私有方法）
      */
-    private void setCpu() {
-        CentralProcessor processor = getProcessor();
+    private void setSysFiles(OperatingSystem os) {
+        FileSystem fileSystem = os.getFileSystem();
+        List<OSFileStore> fsArray = fileSystem.getFileStores();
         
-        // CPU 核心数
-        cpu.setCpuNum(processor.getPhysicalProcessorCount());
-        
-        // CPU 使用率
-        long[] prevTicks = processor.getSystemCpuLoadTicks();
-        Threads.sleep(OSHI_WAIT_SECOND);
-        long[] ticks = processor.getSystemCpuLoadTicks();
-        
-        long user = ticks[CentralProcessor.TickType.USER.getIndex()] - 
-                   prevTicks[CentralProcessor.TickType.USER.getIndex()];
-        long nice = ticks[CentralProcessor.TickType.NICE.getIndex()] - 
-                   prevTicks[CentralProcessor.TickType.NICE.getIndex()];
-        long system = ticks[CentralProcessor.TickType.SYSTEM.getIndex()] - 
-                     prevTicks[CentralProcessor.TickType.SYSTEM.getIndex()];
-        long idle = ticks[CentralProcessor.TickType.IDLE.getIndex()] - 
-                   prevTicks[CentralProcessor.TickType.IDLE.getIndex()];
-        long iowait = ticks[CentralProcessor.TickType.IOWAIT.getIndex()] - 
-                     prevTicks[CentralProcessor.TickType.IOWAIT.getIndex()];
-        long irq = ticks[CentralProcessor.TickType.IRQ.getIndex()] - 
-                  prevTicks[CentralProcessor.TickType.IRQ.getIndex()];
-        long softirq = ticks[CentralProcessor.TickType.SOFTIRQ.getIndex()] - 
-                      prevTicks[CentralProcessor.TickType.SOFTIRQ.getIndex()];
-        
-        long totalCpu = user + nice + system + idle + iowait + irq + softirq;
-        cpu.setCombined(Arith.round(
-            Arith.mul(Arith.sub(totalCpu, idle + iowait), 100.0 / totalCpu), 2
-        ));
-        cpu.setUser(Arith.round(Arith.mul(user, 100.0 / totalCpu), 2));
-        cpu.setSys(Arith.round(Arith.mul(system, 100.0 / totalCpu), 2));
-        cpu.setWait(Arith.round(Arith.mul(iowait, 100.0 / totalCpu), 2));
-        cpu.setFree(Arith.round(Arith.mul(idle, 100.0 / totalCpu), 2));
-    }
-    
-    /**
-     * 设置内存信息
-     */
-    private void setMem() {
-        GlobalMemory memory = getMemory();
-        long total = memory.getTotal();
-        long used = total - memory.getAvailable();
-        
-        mem.setTotal(total);
-        mem.setUsed(used);
-        mem.setFree(total - used);
-        mem.setUsage(Arith.round(Arith.mul(used, 100.0 / total), 2));
-    }
-    
-    /**
-     * 设置系统信息
-     */
-    private void setSys() {
-        OperatingSystem os = getOperatingSystem();
-        
-        // 操作系统信息
-        sys.setComputerName(getHostName());
-        sys.setComputerIp(IpUtils.getHostIp());
-        sys.setOsName(os.getName());
-        sys.setOsArch(System.getProperty("os.arch"));
-        
-        // 系统负载
-        double[] loadAverage = getSystemLoadAverage();
-        if (loadAverage.length > 0) {
-            sys.setSysLoadAverage(loadAverage[0]);
+        for (OSFileStore fs : fsArray) {
+            long free = fs.getUsableSpace();
+            long total = fs.getTotalSpace();
+            long used = total - free;
+            
+            SysFile sysFile = new SysFile();
+            sysFile.setDirName(fs.getMount());
+            sysFile.setSysTypeName(fs.getType());
+            sysFile.setTypeName(fs.getName());
+            sysFile.setTotal(convertFileSize(total));
+            sysFile.setFree(convertFileSize(free));
+            sysFile.setUsed(convertFileSize(used));
+            sysFile.setUsage(Arith.mul(Arith.div(used, total, 4), 100));
+            sysFiles.add(sysFile);
         }
     }
     
     /**
-     * 设置文件系统信息
+     * 字节转换（公开方法）
      */
-    private void setSysFiles() {
-        FileSystem fileSystem = getFileSystem();
-        FileStatus[] fileStatuses = fileSystem.getFileStatuses();
-        
-        for (FileStatus status : fileStatuses) {
-            // 只关心磁盘分区
-            if (status.getType() == FileSystem.TYPE_LOCAL_DRIVE) {
-                SysFile sysFile = new SysFile();
-                sysFile.setDirName(status.getMount());
-                sysFile.setSysTypeName(status.getTypeName());
-                sysFile.setTypeName(status.getType());
-                
-                long total = status.getTotalSpace();
-                long free = status.getUsableSpace();
-                long used = total - free;
-                
-                sysFile.setTotal(convertFileSize(total));
-                sysFile.setFree(convertFileSize(free));
-                sysFile.setUsed(convertFileSize(used));
-                sysFile.setUsage(Arith.round(
-                    Arith.mul(used, 100.0 / total), 2
-                ) + "%");
-                
-                sysFiles.add(sysFile);
-            }
-        }
-    }
-    
-    /**
-     * 文件大小转换
-     */
-    private String convertFileSize(long size) {
-        long gb = 1024 * 1024 * 1024;
-        long mb = 1024 * 1024;
+    public String convertFileSize(long size) {
         long kb = 1024;
-        
+        long mb = kb * 1024;
+        long gb = mb * 1024;
         if (size >= gb) {
-            return String.format("%.2f GB", (float) size / gb);
+            return String.format("%.1f GB", (float) size / gb);
         } else if (size >= mb) {
-            return String.format("%.2f MB", (float) size / mb);
+            float f = (float) size / mb;
+            return String.format(f > 100 ? "%.0f MB" : "%.1f MB", f);
         } else if (size >= kb) {
-            return String.format("%.2f KB", (float) size / kb);
+            float f = (float) size / kb;
+            return String.format(f > 100 ? "%.0f KB" : "%.1f KB", f);
         } else {
-            return size + " B";
+            return String.format("%d B", size);
         }
     }
     
-    // Getters
+    // Getters and Setters
     public Cpu getCpu() { return cpu; }
+    public void setCpu(Cpu cpu) { this.cpu = cpu; }
     public Mem getMem() { return mem; }
+    public void setMem(Mem mem) { this.mem = mem; }
     public Jvm getJvm() { return jvm; }
+    public void setJvm(Jvm jvm) { this.jvm = jvm; }
     public Sys getSys() { return sys; }
+    public void setSys(Sys sys) { this.sys = sys; }
     public List<SysFile> getSysFiles() { return sysFiles; }
+    public void setSysFiles(List<SysFile> sysFiles) { this.sysFiles = sysFiles; }
+}
+```
+
+**使用示例**:
+
+```java
+// Controller 层使用
+@RestController
+@RequestMapping("/monitor/server")
+public class ServerController {
+    
+    @PreAuthorize("@ss.hasPermi('monitor:server:list')")
+    @GetMapping()
+    public AjaxResult getInfo() throws Exception {
+        Server server = new Server();
+        server.copyTo();  // 填充所有信息
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("cpuInfo", server.getCpu());
+        result.put("memInfo", server.getMem());
+        result.put("jvmInfo", server.getJvm());
+        result.put("sysInfo", server.getSys());
+        result.put("sysFiles", server.getSysFiles());
+        
+        return AjaxResult.success(result);
+    }
 }
 ```
 
@@ -260,31 +241,59 @@ public class Cpu {
     private int cpuNum;
     
     /**
-     * 总使用率
+     * CPU 总的使用率（未格式化，getter 会格式化为百分比）
      */
-    private double combined;
+    private double total;
     
     /**
-     * 用户使用率
-     */
-    private double user;
-    
-    /**
-     * 系统使用率
+     * CPU 系统使用率（未格式化，getter 会格式化为百分比）
      */
     private double sys;
     
     /**
-     * 等待率
+     * CPU 用户使用率（未格式化，getter 会格式化为百分比）
+     */
+    private double used;
+    
+    /**
+     * CPU 当前等待率（未格式化，getter 会格式化为百分比）
      */
     private double wait;
     
     /**
-     * 空闲率
+     * CPU 当前空闲率（未格式化，getter 会格式化为百分比）
      */
     private double free;
     
     // Getters and Setters
+    
+    /**
+     * 获取系统使用率（百分比）
+     */
+    public double getSys() {
+        return Arith.round(Arith.mul(sys / total, 100), 2);
+    }
+    
+    /**
+     * 获取用户使用率（百分比）
+     */
+    public double getUsed() {
+        return Arith.round(Arith.mul(used / total, 100), 2);
+    }
+    
+    /**
+     * 获取等待率（百分比）
+     */
+    public double getWait() {
+        return Arith.round(Arith.mul(wait / total, 100), 2);
+    }
+    
+    /**
+     * 获取空闲率（百分比）
+     */
+    public double getFree() {
+        return Arith.round(Arith.mul(free / total, 100), 2);
+    }
 }
 ```
 
@@ -293,13 +302,19 @@ public class Cpu {
 ```json
 {
     "cpuNum": 8,
-    "combined": 45.5,
-    "user": 30.2,
-    "sys": 10.3,
+    "total": 100.0,
+    "sys": 15.5,
+    "used": 35.2,
     "wait": 2.0,
-    "free": 57.5
+    "free": 47.3
 }
 ```
+
+**注意**: 
+- `total` 字段存储总的 CPU 时间片数，不是百分比
+- `sys`、`used`、`wait`、`free` 字段存储原始时间片数
+- Getter 方法会自动计算百分比（除以 total 并乘以 100）
+- 所有百分比保留 2 位小数
 
 ---
 
@@ -312,61 +327,101 @@ public class Cpu {
 ```java
 public class Jvm {
     /**
-     * 当前 JVM 占用的内存总数 (字节)
+     * 当前 JVM 占用的内存总数 (字节，setter 会存储原始值，getter 返回 MB)
      */
-    private long total;
+    private double total;
     
     /**
-     * 最大可用内存 (字节)
+     * JVM 最大可用内存 (字节，setter 会存储原始值，getter 返回 MB)
      */
-    private long max;
+    private double max;
     
     /**
-     * 剩余可用内存 (字节)
+     * JVM 空闲内存 (字节，setter 会存储原始值，getter 返回 MB)
      */
-    private long free;
+    private double free;
     
     /**
-     * JVM 版本
+     * JDK 版本
      */
     private String version;
     
     /**
-     * JVM 安装路径
+     * JDK 安装路径
      */
     private String home;
     
-    /**
-     * JVM 启动时间
-     */
-    private Date startTime;
-    
-    /**
-     * JVM 已运行时间 (秒)
-     */
-    private long runTime;
-    
-    /**
-     * 线程数
-     */
-    private int threadCount;
-    
-    /**
-     * 已加载类数量
-     */
-    private int classCount;
-    
-    /**
-     * 垃圾回收器信息
-     */
-    private String gcInfo;
-    
-    /**
-     * 内存使用率
-     */
-    private double usage;
-    
     // Getters and Setters
+    
+    /**
+     * 获取总内存（MB）
+     * 自动将字节转换为 MB，保留 2 位小数
+     */
+    public double getTotal() {
+        return Arith.div(total, (1024 * 1024), 2);
+    }
+    
+    /**
+     * 获取最大内存（MB）
+     */
+    public double getMax() {
+        return Arith.div(max, (1024 * 1024), 2);
+    }
+    
+    /**
+     * 获取空闲内存（MB）
+     */
+    public double getFree() {
+        return Arith.div(free, (1024 * 1024), 2);
+    }
+    
+    /**
+     * 获取已用内存（MB）
+     */
+    public double getUsed() {
+        return Arith.div(total - free, (1024 * 1024), 2);
+    }
+    
+    /**
+     * 获取内存使用率（百分比）
+     */
+    public double getUsage() {
+        return Arith.mul(Arith.div(total - free, total, 4), 100);
+    }
+    
+    /**
+     * 获取 JDK 名称
+     */
+    public String getName() {
+        return ManagementFactory.getRuntimeMXBean().getVmName();
+    }
+    
+    /**
+     * 获取 JDK 启动时间（格式化后的字符串）
+     */
+    public String getStartTime() {
+        return DateUtils.parseDateToStr(
+            DateUtils.YYYY_MM_DD_HH_MM_SS, 
+            DateUtils.getServerStartDate()
+        );
+    }
+    
+    /**
+     * 获取 JDK 运行时间（格式化后的字符串）
+     */
+    public String getRunTime() {
+        return DateUtils.timeDistance(
+            DateUtils.getNowDate(), 
+            DateUtils.getServerStartDate()
+        );
+    }
+    
+    /**
+     * 获取运行参数
+     */
+    public String getInputArgs() {
+        return ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
+    }
 }
 ```
 
@@ -374,19 +429,23 @@ public class Jvm {
 
 ```json
 {
-    "total": 2147483648,
-    "max": 4294967296,
-    "free": 1073741824,
+    "total": 2048.5,
+    "max": 4096.0,
+    "free": 1024.0,
     "version": "17.0.1",
     "home": "/usr/lib/jvm/java-17",
+    "name": "OpenJDK 64-Bit Server VM",
     "startTime": "2024-01-01 10:00:00",
-    "runTime": 86400,
-    "threadCount": 50,
-    "classCount": 10000,
-    "gcInfo": "G1 Young Generation, G1 Old Generation",
-    "usage": 50.0
+    "runTime": "1 天 2 小时 30 分钟",
+    "inputArgs": "[-Xms512m, -Xmx4g]"
 }
 ```
+
+**注意**: 
+- `total`、`max`、`free` 字段存储原始字节值
+- Getter 方法会自动转换为 MB（除以 1024*1024）并保留 2 位小数
+- `startTime` 和 `runTime` 是格式化后的字符串，不是 Date 和 long
+- 没有 `threadCount`、`classCount`、`gcInfo`、`usage` 属性（usage 是方法不是属性）
 
 ---
 
@@ -399,26 +458,50 @@ public class Jvm {
 ```java
 public class Mem {
     /**
-     * 内存总量 (字节)
+     * 内存总量 (字节，setter 接收 long，getter 返回 GB)
      */
-    private long total;
+    private double total;
     
     /**
-     * 已用内存 (字节)
+     * 已用内存 (字节，setter 接收 long，getter 返回 GB)
      */
-    private long used;
+    private double used;
     
     /**
-     * 剩余内存 (字节)
+     * 剩余内存 (字节，setter 接收 long，getter 返回 GB)
      */
-    private long free;
-    
-    /**
-     * 内存使用率
-     */
-    private double usage;
+    private double free;
     
     // Getters and Setters
+    
+    /**
+     * 获取总内存（GB）
+     * 自动将字节转换为 GB，保留 2 位小数
+     */
+    public double getTotal() {
+        return Arith.div(total, (1024 * 1024 * 1024), 2);
+    }
+    
+    /**
+     * 获取已用内存（GB）
+     */
+    public double getUsed() {
+        return Arith.div(used, (1024 * 1024 * 1024), 2);
+    }
+    
+    /**
+     * 获取空闲内存（GB）
+     */
+    public double getFree() {
+        return Arith.div(free, (1024 * 1024 * 1024), 2);
+    }
+    
+    /**
+     * 获取内存使用率（百分比）
+     */
+    public double getUsage() {
+        return Arith.mul(Arith.div(used, total, 4), 100);
+    }
 }
 ```
 
@@ -426,12 +509,17 @@ public class Mem {
 
 ```json
 {
-    "total": 17179869184,
-    "used": 8589934592,
-    "free": 8589934592,
-    "usage": 50.0
+    "total": 16.0,
+    "used": 8.5,
+    "free": 7.5,
+    "usage": 53.13
 }
 ```
+
+**注意**: 
+- `total`、`used`、`free` 字段存储原始字节值（long）
+- Getter 方法会自动转换为 GB（除以 1024*1024*1024）并保留 2 位小数
+- `usage` 是方法不是属性
 
 ---
 
@@ -444,14 +532,19 @@ public class Mem {
 ```java
 public class Sys {
     /**
-     * 计算机名
+     * 服务器名称
      */
     private String computerName;
     
     /**
-     * 计算机 IP
+     * 服务器 IP
      */
     private String computerIp;
+    
+    /**
+     * 项目路径
+     */
+    private String userDir;
     
     /**
      * 操作系统名称
@@ -463,11 +556,6 @@ public class Sys {
      */
     private String osArch;
     
-    /**
-     * 系统负载平均值
-     */
-    private double sysLoadAverage;
-    
     // Getters and Setters
 }
 ```
@@ -478,11 +566,15 @@ public class Sys {
 {
     "computerName": "server-01",
     "computerIp": "192.168.1.100",
+    "userDir": "/home/workspace/com/wfxx-vue3",
     "osName": "Linux",
-    "osArch": "amd64",
-    "sysLoadAverage": 1.5
+    "osArch": "amd64"
 }
 ```
+
+**注意**: 
+- 没有 `sysLoadAverage` 属性
+- `userDir` 是项目路径，不是用户目录
 
 ---
 
@@ -500,34 +592,34 @@ public class SysFile {
     private String dirName;
     
     /**
-     * 文件系统类型
+     * 盘符类型（文件系统类型）
      */
     private String sysTypeName;
     
     /**
-     * 文件系统类型名称
+     * 文件类型
      */
     private String typeName;
     
     /**
-     * 总大小
+     * 总大小（格式化后的字符串，如 "500.0 GB"）
      */
     private String total;
     
     /**
-     * 剩余大小
+     * 剩余大小（格式化后的字符串）
      */
     private String free;
     
     /**
-     * 已用大小
+     * 已经使用量（格式化后的字符串）
      */
     private String used;
     
     /**
-     * 已用百分比
+     * 资源的使用率（百分比，如 50.0）
      */
-    private String usage;
+    private double usage;
     
     // Getters and Setters
 }
@@ -539,13 +631,18 @@ public class SysFile {
 {
     "dirName": "/",
     "sysTypeName": "ext4",
-    "typeName": "local",
-    "total": "500.00 GB",
-    "free": "250.00 GB",
-    "used": "250.00 GB",
-    "usage": "50.00%"
+    "typeName": "overlay",
+    "total": "500.0 GB",
+    "free": "250.0 GB",
+    "used": "250.0 GB",
+    "usage": 50.0
 }
 ```
+
+**注意**: 
+- `total`、`free`、`used` 是格式化后的字符串（如 "500.0 GB"）
+- `usage` 是 double 类型的百分比数值，不是字符串
+- 数据由 `OSFileStore` 获取，不是 `FileStatus`
 
 ---
 
