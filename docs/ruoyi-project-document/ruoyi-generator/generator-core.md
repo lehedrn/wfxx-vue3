@@ -233,8 +233,8 @@ public static void initColumnField(GenTableColumn column, GenTable table) {
 | `setMenuVelocityContext()` | 设置菜单相关变量 |
 | `setTreeVelocityContext()` | 设置树表相关变量 |
 | `setSubVelocityContext()` | 设置主子表相关变量 |
-| `getTemplateList()` | 获取模板列表 |
-| `getFileName()` | 生成文件名 |
+| `getTemplateList(tplCategory, tplWebType)` | 获取模板列表（需模板类型和前端类型参数） |
+| `getFileName(template, genTable)` | 生成文件名 |
 
 ### 模板上下文变量
 

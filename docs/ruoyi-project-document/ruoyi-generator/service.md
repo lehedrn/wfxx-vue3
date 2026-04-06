@@ -5,7 +5,7 @@
 `ruoyi-generator/service` 包提供代码生成器相关的业务逻辑处理。
 
 **源码位置**: `ruoyi-generator/src/main/java/com/ruoyi/generator/service/`  
-**实现位置**: `ruoyi-generator/src/main/java/com/ruoyi/generator/service/impl/`
+**实现位置**: `ruoyi-generator/src/main/java/com/ruoyi/generator/service/`
 
 ## 模块结构
 
@@ -13,9 +13,8 @@
 service/
 ├── IGenTableService.java          # 业务表服务接口
 ├── IGenTableColumnService.java    # 业务表字段服务接口
-└── impl/
-    ├── GenTableServiceImpl.java       # 业务表服务实现
-    └── GenTableColumnServiceImpl.java # 业务表字段服务实现
+├── GenTableServiceImpl.java       # 业务表服务实现
+└── GenTableColumnServiceImpl.java # 业务表字段服务实现
 ```
 
 ## 服务接口总览
