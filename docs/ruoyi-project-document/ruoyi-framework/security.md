@@ -2,7 +2,7 @@
 
 ## 概述
 
-`ruoyi-framework/security` 包提供了基于 Spring Security + JWT 的安全认证机制，包括用户认证、权限校验、Token 管理等功能。
+`ruoyi-framework/security` 包提供基于 Spring Security + JWT 的安全认证机制，包括用户认证、权限校验、Token 管理等功能。
 
 ## 模块结构
 
@@ -15,9 +15,13 @@ security/
 └── LogoutSuccessHandlerImpl.java      # 登出成功处理
 ```
 
+**源码位置**: `ruoyi-framework/src/main/java/com/ruoyi/framework/security/`
+
 ---
 
-## 1. JwtAuthenticationTokenFilter - JWT 认证过滤器
+## 核心组件
+
+### 1. JwtAuthenticationTokenFilter - JWT 认证过滤器
 
 **用途**: 解析 JWT Token 并设置 Spring Security 认证上下文
 
@@ -47,17 +51,10 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             // 4. 创建认证令牌
             UsernamePasswordAuthenticationToken authenticationToken = 
                 new UsernamePasswordAuthenticationToken(
-                    loginUser, 
-                    null, 
-                    loginUser.getAuthorities()
+                    loginUser, null, loginUser.getAuthorities()
                 );
             
-            // 5. 设置详情
-            authenticationToken.setDetails(
-                new WebAuthenticationDetailsSource().buildDetails(request)
-            );
-            
-            // 6. 设置认证信息到 SecurityContext
+            // 5. 设置到 SecurityContextHolder
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         }
         
@@ -73,9 +70,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         ↓
     TokenService.getLoginUser(request)
         ↓
-    从 Header 获取 Token
-        ↓
-    解析 JWT 获取 uuid
+    从 Header 获取 Token → 解析 JWT 获取 uuid
         ↓
     Redis 获取 LoginUser
         ↓
@@ -84,64 +79,42 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     创建 AuthenticationToken
         ↓
     设置到 SecurityContextHolder
-        ↓
-    后续过滤器使用
 ```
 
 ---
 
-## 2. AuthenticationContextHolder - 认证上下文持有者
+### 2. AuthenticationContextHolder - 认证上下文持有者
 
 **用途**: 工具类，用于检查当前是否有认证信息
 
-**核心实现**:
+**源码位置**: `ruoyi-framework/src/main/java/com/ruoyi/framework/security/AuthenticationContextHolder.java`
 
 ```java
-// 注意：这是一个简单的工具类，没有 Spring 注解
 public class AuthenticationContextHolder {
     
-    /**
-     * 获取认证信息
-     * 实际使用 SecurityContextHolder 获取
-     */
     public static Authentication getAuthentication() {
         return SecurityContextHolder.getContext().getAuthentication();
     }
     
-    /**
-     * 清空认证信息
-     */
     public static void clear() {
         SecurityContextHolder.clearContext();
     }
 }
 ```
 
-**使用示例**:
-
-```java
-// 获取当前认证信息
-Authentication auth = AuthenticationContextHolder.getAuthentication();
-if (auth != null) {
-    LoginUser user = (LoginUser) auth.getPrincipal();
-    Long userId = user.getUserId();
-}
-```
-
 ---
 
-## 3. PermissionContextHolder - 权限上下文持有者
+### 3. PermissionContextHolder - 权限上下文持有者
 
 **用途**: 存储和获取数据权限上下文（使用 RequestContextHolder 而非 ThreadLocal）
 
-**核心实现**:
+**源码位置**: `ruoyi-framework/src/main/java/com/ruoyi/framework/security/PermissionContextHolder.java`
 
 ```java
 public class PermissionContextHolder {
     
     /**
      * 设置权限上下文到 RequestAttributes
-     * 使用 RequestContextHolder 而非 ThreadLocal，支持异步线程
      */
     public static void setContext(String permissionSQL) {
         RequestContextHolder.currentRequestAttributes().setAttribute(
@@ -168,63 +141,31 @@ public class PermissionContextHolder {
 
 ---
 
-## 4. AuthenticationEntryPointImpl - 认证失败处理
+### 4. AuthenticationEntryPointImpl - 认证失败处理
 
 **用途**: 未认证用户访问受保护资源时的处理
 
-**核心实现**:
-
-```java
-@Component
-public class AuthenticationEntryPointImpl implements AuthenticationEntryPoint, Serializable {
-    
-    private static final long serialVersionUID = -8970718410437077606L;
-    
-    @Override
-    public void commence(HttpServletRequest request, 
-                        HttpServletResponse response, 
-                        AuthenticationException e) throws IOException {
-        // 设置响应格式
-        response.setContentType("application/json;charset=UTF-8");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        
-        // 返回错误信息
-        PrintWriter out = response.getWriter();
-        out.write(JSONObject.toJSONString(AjaxResult.error(
-            HttpServletResponse.SC_UNAUTHORIZED, 
-            "认证失败，请先登录"
-        )));
-        out.flush();
-        out.close();
-    }
-}
-```
+**源码位置**: `ruoyi-framework/src/main/java/com/ruoyi/framework/security/AuthenticationEntryPointImpl.java`
 
 **触发场景**:
 - 未携带 Token 访问需要认证的接口
 - Token 过期
 - Token 格式错误
-- Token 签名验证失败
 
 ---
 
-## 5. LogoutSuccessHandlerImpl - 登出成功处理
+### 5. LogoutSuccessHandlerImpl - 登出成功处理
 
 **用途**: 用户登出后的处理逻辑
 
-**核心实现**:
+**核心逻辑**:
 
 ```java
 @Component
-public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler, Serializable {
-    
-    private static final long serialVersionUID = -7680814066279718781L;
+public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler {
     
     @Autowired
     private TokenService tokenService;
-    
-    @Autowired
-    private RedisCache redisCache;
     
     @Override
     public void onLogoutSuccess(HttpServletRequest request, 
@@ -235,18 +176,16 @@ public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler, Serializa
             LoginUser loginUser = tokenService.getLoginUser(request);
             
             if (loginUser != null) {
-                // 2. 获取 Token
+                // 2. 删除 Redis 中的登录缓存
                 String token = tokenService.resolveToken(request);
-                
-                // 3. 删除 Redis 中的登录缓存
                 String loginKey = CacheConstants.LOGIN_TOKEN_KEY + token;
                 redisCache.deleteObject(loginKey);
                 
-                // 4. 记录登出日志
+                // 3. 记录登出日志
                 recordLogoutLog(loginUser);
             }
             
-            // 5. 返回成功响应
+            // 4. 返回成功响应
             response.setContentType("application/json;charset=UTF-8");
             PrintWriter out = response.getWriter();
             out.write(JSONObject.toJSONString(AjaxResult.success("退出成功")));
@@ -256,17 +195,6 @@ public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler, Serializa
             log.error("登出异常：{}", e.getMessage(), e);
             throw new IOException("登出失败");
         }
-    }
-    
-    /**
-     * 记录登出日志
-     */
-    private void recordLogoutLog(LoginUser loginUser) {
-        AsyncManager.getInstance().execute(AsyncFactory.recordLogininfor(
-            loginUser.getUsername(), 
-            Constants.LOGOUT, 
-            "用户退出登录"
-        ));
     }
 }
 ```
@@ -278,20 +206,16 @@ public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler, Serializa
                   ↓
             LogoutSuccessHandler
                   ↓
-            获取 LoginUser
+            获取 LoginUser → 删除 Redis 登录缓存
                   ↓
-            删除 Redis 登录缓存
-                  ↓
-            记录登出日志
-                  ↓
-            返回成功响应
+            记录登出日志 → 返回成功响应
 ```
 
 ---
 
 ## TokenService - Token 服务
 
-**位置**: `ruoyi-framework/web/service/TokenService.java`
+**源码位置**: `ruoyi-framework/src/main/java/com/ruoyi/framework/web/service/TokenService.java`
 
 **用途**: JWT Token 的创建、解析、验证和刷新
 
@@ -301,23 +225,17 @@ public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler, Serializa
 @Component
 public class TokenService {
     
-    // 令牌有效期（分钟）
     @Value("${token.expireTime}")
-    private int expireTime;
+    private int expireTime; // 令牌有效期（分钟）
     
-    // 令牌秘钥
     @Value("${token.secret}")
-    private String secret;
+    private String secret;  // 令牌秘钥
     
     @Autowired
     private RedisCache redisCache;
     
     /**
      * 创建 Token
-     * 1. 生成 IdUtils.fastUUID() 作为 token 标识
-     * 2. 设置用户代理信息（IP、地址、浏览器、OS）
-     * 3. 刷新 Token 有效期（存入 Redis）
-     * 4. 创建 JWT（包含 loginUserKey 和 username）
      */
     public String createToken(LoginUser loginUser) {
         String token = IdUtils.fastUUID();
@@ -328,7 +246,10 @@ public class TokenService {
         Map<String, Object> claims = new HashMap<>();
         claims.put(Constants.LOGIN_USER_KEY, token);
         claims.put(Constants.JWT_USERNAME, loginUser.getUsername());
-        return createToken(claims);
+        return Jwts.builder()
+                .setClaims(claims)
+                .signWith(SignatureAlgorithm.HS512, secret)
+                .compact();
     }
     
     /**
@@ -340,8 +261,7 @@ public class TokenService {
             try {
                 Claims claims = parseToken(token);
                 String uuid = (String) claims.get(Constants.LOGIN_USER_KEY);
-                String userKey = getTokenKey(uuid);
-                return redisCache.getCacheObject(userKey);
+                return redisCache.getCacheObject(CacheConstants.LOGIN_TOKEN_KEY + uuid);
             } catch (Exception e) {
                 log.error("获取用户信息异常'{}'", e.getMessage());
             }
@@ -361,7 +281,7 @@ public class TokenService {
     }
     
     /**
-     * 刷新令牌有效期
+     * 刷新 Token 有效期
      */
     public void refreshToken(LoginUser loginUser) {
         loginUser.setLoginTime(System.currentTimeMillis());
@@ -371,74 +291,21 @@ public class TokenService {
         String userKey = getTokenKey(loginUser.getToken());
         redisCache.setCacheObject(userKey, loginUser, expireTime, TimeUnit.MINUTES);
     }
-    
-    /**
-     * 删除用户身份信息
-     */
-    public void delLoginUser(String token) {
-        if (StringUtils.isNotEmpty(token)) {
-            String userKey = getTokenKey(token);
-            redisCache.deleteObject(userKey);
-        }
-    }
-    
-    // ========== 私有方法 ==========
-    
-    private String createToken(Map<String, Object> claims) {
-        return Jwts.builder()
-                .setClaims(claims)
-                .signWith(SignatureAlgorithm.HS512, secret)
-                .compact();
-    }
-    
-    private Claims parseToken(String token) {
-        return Jwts.parser()
-                .setSigningKey(secret)
-                .parseClaimsJws(token)
-                .getBody();
-    }
-    
-    private String getToken(HttpServletRequest request) {
-        String token = request.getHeader(header);
-        if (StringUtils.isNotEmpty(token) && 
-            token.startsWith(Constants.TOKEN_PREFIX)) {
-            token = token.replace(Constants.TOKEN_PREFIX, "");
-        }
-        return token;
-    }
-    
-    private String getTokenKey(String uuid) {
-        return CacheConstants.LOGIN_TOKEN_KEY + uuid;
-    }
 }
 ```
 
 **JWT Token 结构**:
 
 ```
-Header (Base64):
-{
-  "alg": "HS512",
-  "typ": "JWT"
-}
-
-Payload (Base64):
-{
-  "loginUserKey": "uuid-token-string",
-  "username": "admin"
-}
-
-Signature:
-HS512(base64(header) + "." + base64(payload), secret)
+Header: {"alg": "HS512", "typ": "JWT"}
+Payload: {"loginUserKey": "uuid-token-string", "username": "admin"}
+Signature: HS512(base64(header) + "." + base64(payload), secret)
 ```
-
-**完整 Token 示例**:
-`Bearer eyJhbGciOiJIUzUxMiJ9.eyJsb2dpblVzZXJLZXkiOiJhYmNkMTIzNCIsInVzZXJuYW1lIjoiYWRtaW4ifQ.signature`
 
 **说明**:
 - Token 由 JWT 构成，但实际用户信息存储在 Redis 中
 - JWT 中只包含 loginUserKey（用于 Redis 查询）和 username
-- Token 有效期由 `${token.expireTime}` 配置（默认 30 分钟）
+- Token 有效期由配置决定（默认 120 分钟）
 - 相差不足 20 分钟自动刷新
 
 ---
@@ -470,20 +337,16 @@ Redis 存储登录信息
 ### 2. 请求认证流程
 
 ```
-HTTP 请求
-    ↓
-JwtAuthenticationTokenFilter
-    ↓
+HTTP 请求 → JwtAuthenticationTokenFilter
+        ↓
 解析 Token 请求头
-    ↓
-TokenService.getLoginUser()
-    ↓
-Redis 获取登录信息
-    ↓
+        ↓
+TokenService.getLoginUser() → Redis 获取登录信息
+        ↓
 创建 AuthenticationToken
-    ↓
-AuthenticationContextHolder.set()
-    ↓
+        ↓
+设置到 AuthenticationContextHolder
+        ↓
 后续业务使用 SecurityUtils.getLoginUser()
 ```
 
@@ -509,16 +372,15 @@ LoginUser.getPermissions()
 
 ## 使用示例
 
-### 1. Controller 中的权限控制
+### Controller 中的权限控制
 
 ```java
 @RestController
 @RequestMapping("/system/user")
-public class SysUserController extends BaseController {
+public class SysUserController {
     
     /**
-     * 获取用户列表
-     * 需要 system:user:list 权限
+     * 获取用户列表 - 需要 system:user:list 权限
      */
     @PreAuthorize("@ss.hasPermi('system:user:list')")
     @GetMapping("/list")
@@ -529,8 +391,7 @@ public class SysUserController extends BaseController {
     }
     
     /**
-     * 新增用户
-     * 需要 system:user:add 权限
+     * 新增用户 - 需要 system:user:add 权限
      */
     @PreAuthorize("@ss.hasPermi('system:user:add')")
     @PostMapping
@@ -540,7 +401,7 @@ public class SysUserController extends BaseController {
 }
 ```
 
-### 2. 获取当前登录用户
+### 获取当前登录用户
 
 ```java
 // 方式 1：使用 SecurityUtils
@@ -552,17 +413,6 @@ LoginUser loginUser = SecurityUtils.getLoginUser();
 @GetMapping("/info")
 public AjaxResult getUserInfo(@LoginUser LoginUser user) {
     return AjaxResult.success(user);
-}
-```
-
-### 3. 登出操作
-
-```java
-@PostMapping("/logout")
-public AjaxResult logout() {
-    // Spring Security 自动处理，调用 LogoutSuccessHandlerImpl
-    SecurityContextHolder.clearContext();
-    return AjaxResult.success("退出成功");
 }
 ```
 

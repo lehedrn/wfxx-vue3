@@ -2,64 +2,26 @@
 
 ## 12. FileUploadUtils - 文件上传工具类
 
+> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/file/FileUploadUtils.java`
+
 **用途**: 处理文件上传，支持大小校验、类型校验、自动命名等
 
-### 常量
-```java
-DEFAULT_MAX_SIZE = 50 * 1024 * 1024L           // 默认 50MB
-DEFAULT_FILE_NAME_LENGTH = 100                 // 文件名最大长度
-```
+**常量**: `DEFAULT_MAX_SIZE` (50MB), `DEFAULT_FILE_NAME_LENGTH` (100)
 
-### 核心方法
+**核心方法**:
 
-#### 文件上传
-```java
-// 使用默认配置上传
-String upload(MultipartFile file)
-
-// 指定目录上传
-String upload(String baseDir, MultipartFile file)
-
-// 指定目录和类型上传
-String upload(String baseDir, MultipartFile file, String[] allowedExtension)
-
-// 指定是否自定义文件名
-String upload(String baseDir, MultipartFile file, String[] allowedExtension, boolean useCustomNaming)
-```
-
-#### 文件名校验
-```java
-// 编码文件名（日期目录 + 原文件名 + 序列值 + 后缀）
-String extractFilename(MultipartFile file)
-
-// UUID 文件名（日期目录 + UUID + 后缀）
-String uuidFilename(MultipartFile file)
-```
-
-#### 文件校验
-```java
-// 文件大小和类型校验
-void assertAllowed(MultipartFile file, String[] allowedExtension)
-
-// 检查扩展名是否允许
-boolean isAllowedExtension(String extension, String[] allowedExtension)
-
-// 获取文件扩展名
-String getExtension(MultipartFile file)
-```
-
-#### 获取文件路径
-```java
-File getAbsoluteFile(String uploadDir, String fileName)
-String getPathFileName(String uploadDir, String fileName)
-```
+| 类型 | 方法 |
+|------|------|
+| 文件上传 | `upload(file)`, `upload(baseDir, file)`, `upload(baseDir, file, allowedExtension)`, `upload(baseDir, file, allowedExtension, useCustomNaming)` |
+| 文件名校验 | `extractFilename(file)`, `uuidFilename(file)` |
+| 文件校验 | `assertAllowed(file, allowedExtension)`, `isAllowedExtension(extension, allowedExtension)`, `getExtension(file)` |
+| 文件路径 | `getAbsoluteFile(uploadDir, fileName)`, `getPathFileName(uploadDir, fileName)` |
 
 **使用示例**:
 ```java
 @PostMapping("/upload")
 public AjaxResult upload(@RequestParam("file") MultipartFile file) {
     try {
-        // 上传到默认目录，只允许图片
         String fileName = FileUploadUtils.upload(file);
         return AjaxResult.success(fileName);
     } catch (FileSizeLimitExceededException e) {
@@ -68,148 +30,52 @@ public AjaxResult upload(@RequestParam("file") MultipartFile file) {
         return AjaxResult.error("文件类型不允许");
     }
 }
-
-// 自定义类型和目录
-String[] imageExtension = {"jpg", "png", "gif"};
-String fileName = FileUploadUtils.upload("/upload/images", file, imageExtension);
 ```
 
 ---
 
 ## 13. 文件工具类 (file 包)
 
-### FileUtils - 文件处理工具
+> 源码目录：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/file/`
 
-**核心方法**:
-```java
-// 下载文件
-void downloadFile(HttpServletResponse response, String fileName, String realName)
-
-// 删除文件
-boolean deleteFile(String absolutePath)
-
-// 复制文件/目录
-void copyFile(String source, String target)
-void copyDirectory(String source, String target)
-
-// 检查文件是否允许下载
-boolean checkAllowDownload(String fileName)
-
-// 获取文件名（去掉路径）
-String getName(String fileName)
-```
-
-### FileTypeUtils - 文件类型工具
-
-```java
-// 获取文件类型
-String getFileType(File file)
-String getFileType(String fileName)
-
-// 是否图片
-boolean isImage(String fileType)
-
-// 是否 Flash
-boolean isFlash(String fileType)
-
-// 是否视频
-boolean isMedia(String fileType)
-```
-
-### ImageUtils - 图片工具
-
-```java
-// 检查图片
-boolean checkIsImage(String fileName)
-boolean checkIsImage(MultipartFile file)
-
-// 获取图片信息
-BufferedImage getImage(String imageUrl)
-```
-
-### MimeTypeUtils - MIME 类型工具
-
-**允许的类型**:
-```java
-// 默认允许的类型
-DEFAULT_ALLOWED_EXTENSION
-
-// 图片
-IMAGE_EXTENSION = {"bmp", "gif", "jpg", "jpeg", "png"}
-
-// Flash
-FLASH_EXTENSION = {"swf", "flv"}
-
-// 媒体
-MEDIA_EXTENSION = {"swf", "flv", "mp3", "wav", "wma", "wmv", "mid", "avi", "mpg", "asf", "rm", "rmvb"}
-
-// 视频
-VIDEO_EXTENSION = {"mp4", "avi", "rmvb", "rm", "mov", "mkv"}
-```
+| 工具类 | 核心方法 |
+|--------|----------|
+| `FileUtils` | `downloadFile(response, fileName, realName)`, `deleteFile(absolutePath)`, `copyFile/copyDirectory(source, target)`, `checkAllowDownload(fileName)`, `getName(fileName)` |
+| `FileTypeUtils` | `getFileType(file/fileName)`, `isImage(fileType)`, `isFlash(fileType)`, `isMedia(fileType)` |
+| `ImageUtils` | `checkIsImage(fileName/file)`, `getImage(imageUrl)` |
+| `MimeTypeUtils` | 常量：`DEFAULT_ALLOWED_EXTENSION`, `IMAGE_EXTENSION`, `FLASH_EXTENSION`, `MEDIA_EXTENSION`, `VIDEO_EXTENSION` |
 
 ---
 
 ## 14. HTML 工具类 (html 包)
 
-### EscapeUtil - HTML 转义工具
+> 源码目录：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/html/`
 
-**核心方法**:
-```java
-// HTML 转义
-String escape(String html)
-
-// HTML 反转义
-String unescape(String html)
-
-// XSS 清理（去除脚本）
-String clean(String html)
-```
+| 工具类 | 核心方法 |
+|--------|----------|
+| `EscapeUtil` | `escape(html)`, `unescape(html)`, `clean(html)` (XSS 清理) |
+| `HTMLFilter` | `filter(dangerousHtml)` |
 
 **使用示例**:
 ```java
 // 转义
-EscapeUtil.escape("<script>alert('xss')</script>")
-// 结果：&lt;script&gt;alert('xss')&lt;/script&gt;
+EscapeUtil.escape("<script>alert('xss')</script>")  // &lt;script&gt;alert('xss')&lt;/script&gt;
 
 // XSS 清理
-EscapeUtil.clean("<script>alert('xss')</script>test")
-// 结果：test
-```
-
-### HTMLFilter - HTML 过滤器
-
-**用途**: 过滤 HTML 中的不安全标签
-
-**使用示例**:
-```java
-HTMLFilter filter = new HTMLFilter();
-String safeHtml = filter.filter(dangerousHtml);
+EscapeUtil.clean("<script>alert('xss')</script>test")  // test
 ```
 
 ---
 
 ## 15. HTTP 工具类 (http 包)
 
-### HttpUtils - HTTP 请求工具
+> 源码目录：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/http/`
 
-**发送 GET 请求**:
-```java
-String sendGet(String url)
-String sendGet(String url, String param)
-String sendGet(String url, String param, String contentType)
-```
-
-**发送 POST 请求**:
-```java
-String sendPost(String url, String param)
-String sendPost(String url, String param, String contentType)
-```
-
-**发送 SSL POST 请求**:
-```java
-String sendSSLPost(String url, String param)
-String sendSSLPost(String url, String param, String contentType)
-```
+| 工具类 | 核心方法 |
+|--------|----------|
+| `HttpUtils` | `sendGet(url/param/contentType)`, `sendPost(url, param, contentType)`, `sendSSLPost(url, param, contentType)` |
+| `HttpHelper` | `getBodyString(request)` |
+| `UserAgentUtils` | `getUserAgent(request)`, `getUserAgent(uaString)` |
 
 **使用示例**:
 ```java
@@ -217,66 +83,27 @@ String sendSSLPost(String url, String param, String contentType)
 String result = HttpUtils.sendGet("https://api.example.com/data");
 String result = HttpUtils.sendGet("https://api.example.com/data", "key=value");
 
-// POST 请求
-String param = "name=test&value=123";
-String result = HttpUtils.sendPost("https://api.example.com/submit", param);
-
-// JSON POST
+// POST 请求 (JSON)
 String jsonParam = "{\"name\":\"test\"}";
 String result = HttpUtils.sendPost("https://api.example.com/api", jsonParam, "application/json");
-```
-
-### HttpHelper - HTTP 辅助工具
-
-```java
-// 获取请求 Body
-String getBodyString(ServletRequest request)
-```
-
-### UserAgentUtils - 用户代理工具
-
-```java
-// 获取用户代理字符串
-String getUserAgent(HttpServletRequest request)
-
-// 解析浏览器信息
-UserAgent getUserAgent(String userAgentString)
 ```
 
 ---
 
 ## 16. IP 工具类 (ip 包)
 
-### AddressUtils - 地址查询工具
+> 源码目录：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/ip/`
 
-**核心方法**:
-```java
-String getRealAddressByIP(String ip)
-```
+| 工具类 | 核心方法 |
+|--------|----------|
+| `AddressUtils` | `getRealAddressByIP(ip)` |
+| `IpUtils` | `internalIp(ip)`, `isValidIp(ip)`, `getIpAddr(request)` |
 
 **使用示例**:
 ```java
 // 根据 IP 获取地址
 String address = AddressUtils.getRealAddressByIP("8.8.8.8");
-// 结果：美国 加利福尼亚州
-```
 
-### IpUtils - IP 工具
-
-**核心方法**:
-```java
-// 是否内网 IP
-boolean internalIp(String ip)
-
-// 检查 IP 是否合法
-boolean isValidIp(String ip)
-
-// 获取客户端 IP
-String getIpAddr(HttpServletRequest request)
-```
-
-**使用示例**:
-```java
 // 检查是否内网
 boolean isInternal = IpUtils.internalIp("192.168.1.1");  // true
 
@@ -288,173 +115,90 @@ String ip = IpUtils.getIpAddr(request);
 
 ## 17. POI 工具类 (poi 包) - Excel 处理
 
-### ExcelUtil - Excel 工具类
+> 源码目录：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/poi/`
 
-**用途**: Excel 导入导出
+**ExcelUtil - Excel 工具类**:
 
-**核心方法**:
+| 类型 | 方法 |
+|------|------|
+| 导出 | `exportExcel(list, sheetName)`, `exportExcel(os, list)`, `exportExcel(data, title)` (多 sheet) |
+| 导入 | `importExcel(inputStream)`, `importExcel(filePath)` |
 
-**导出**:
-```java
-// 导出列表
-void exportExcel(List<T> list, String sheetName)
+**注解**:
+- `@ExcelSheet(name, rowNum)` - 配置 Sheet 属性
+- `@Excel` - 配置列属性 (见 annotation.md)
 
-// 导出到流
-void exportExcel(OutputStream os, List<T> list)
-
-// 导出多 sheet
-void exportExcel(Map<String, List<?>> data, String title)
-```
-
-**导入**:
-```java
-// 从输入流导入
-List<T> importExcel(InputStream inputStream)
-
-// 从文件导入
-List<T> importExcel(String filePath)
-```
-
-**使用示例**:
-```java
-// 导出
-ExcelUtil<UserExportVO> util = new ExcelUtil<>(UserExportVO.class);
-util.exportExcel(response, userList, "用户数据");
-
-// 导入
-List<UserImportVO> users = util.importExcel(inputStream);
-```
-
-### ExcelSheet - Sheet 注解
-
-**用途**: 配置 Excel Sheet 属性
-
-```java
-@ExcelSheet(name = "用户列表", rowNum = 100)
-```
-
-### ExcelHandlerAdapter - 数据处理器适配器
-
-**用途**: 自定义 Excel 数据处理逻辑
-
-```java
-public interface ExcelHandlerAdapter {
-    String[] format(Object value, String[] args);
-}
-```
+**适配器**: `ExcelHandlerAdapter.format(value, args)` - 自定义数据处理
 
 ---
 
 ## 18. 签名工具类 (sign 包)
 
-### Md5Utils - MD5 加密工具
+> 源码目录：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/sign/`
 
-**核心方法**:
-```java
-String hash(String s)  // MD5 加密
-```
+| 工具类 | 核心方法 |
+|--------|----------|
+| `Md5Utils` | `hash(s)` (MD5 加密) |
+| `Base64` | `encode(data)`, `decode(data)`, `decodeToString(data)` |
 
 **使用示例**:
 ```java
-String md5 = Md5Utils.hash("password123");
-// 结果：4297f44b13955235245b2497399d7a93
-```
-
-### Base64 - Base64 编码工具
-
-**核心方法**:
-```java
-// 编码
-String encode(byte[] data)
-String encode(String data)
-
-// 解码
-byte[] decode(String data)
-String decodeToString(byte[] data)
+String md5 = Md5Utils.hash("password123");  // 4297f44b13955235245b2497399d7a93
 ```
 
 ---
 
 ## 19. Spring 工具类 (spring 包)
 
-### SpringUtils - Spring 工具
+> 源码目录：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/spring/`
 
-**用途**: 从 Spring 容器获取 Bean
+**SpringUtils**: 从 Spring 容器获取 Bean
 
-**核心方法**:
-```java
-<T> T getBean(Class<T> requiredType)
-<T> T getBean(String name, Class<T> requiredType)
-boolean containsBean(String name)
-```
+**方法**: `getBean(requiredType)`, `getBean(name, requiredType)`, `containsBean(name)`
 
 **使用示例**:
 ```java
-// 在非 Spring 管理的类中获取 Bean
 UserService userService = SpringUtils.getBean(UserService.class);
-List<SysUser> list = userService.selectUserList(user);
 ```
 
 ---
 
 ## 20. Bean 工具类 (bean 包)
 
-### BeanUtils - Bean 工具
+> 源码目录：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/bean/`
 
-**核心方法**:
-```java
-// Bean 复制
-void copyProperties(Object source, Object target)
-
-// Bean 转 Map
-Map<String, Object> describe(Object bean)
-
-// Map 转 Bean
-<T> T populate(Map<String, Object> map, Class<T> clazz)
-```
-
-### BeanValidators - Bean 校验工具
-
-**核心方法**:
-```java
-void validateWithException(Validator validator, Object target, Class<?>... groups)
-```
+| 工具类 | 核心方法 |
+|--------|----------|
+| `BeanUtils` | `copyProperties(source, target)`, `describe(bean)`, `populate(map, clazz)` |
+| `BeanValidators` | `validateWithException(validator, target, groups)` |
 
 ---
 
 ## 21. 反射工具类 (reflect 包)
 
-### ReflectUtils - 反射工具
+> 源码目录：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/reflect/`
 
-**核心方法**:
-```java
-// 获取字段
-Field getField(Class<?> clazz, String fieldName)
+**ReflectUtils**:
 
-// 获取字段值
-Object getFieldValue(Object obj, String fieldName)
-
-// 设置字段值
-void setFieldValue(Object obj, String fieldName, Object value)
-
-// 调用方法
-Object invokeMethod(Object obj, String methodName, Object... args)
-```
+| 方法 | 说明 |
+|------|------|
+| `getField(clazz, fieldName)` | 获取字段 |
+| `getFieldValue(obj, fieldName)` | 获取字段值 |
+| `setFieldValue(obj, fieldName, value)` | 设置字段值 |
+| `invokeMethod(obj, methodName, args)` | 调用方法 |
 
 ---
 
 ## 22. SQL 工具类 (sql 包)
 
-### SqlUtil - SQL 工具
+> 源码目录：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/sql/`
 
-**核心方法**:
-```java
-// 过滤 SQL 注入
-String escapeOrderBySql(String value)
+**SqlUtil**:
 
-// 检查 SQL 注入
-boolean isSQLInjection(String value)
-```
+| 方法 | 说明 |
+|------|------|
+| `escapeOrderBySql(value)` | 过滤 SQL 注入 |
+| `isSQLInjection(value)` | 检查 SQL 注入 |
 
 **使用示例**:
 ```java
@@ -467,84 +211,29 @@ PageHelper.orderBy(orderBy);
 
 ## 23. UUID 工具类 (uuid 包)
 
-### IdUtils - ID 工具
+> 源码目录：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/uuid/`
 
-**核心方法**:
-```java
-// 简单 UUID（无横杠）
-String simpleUUID()
-
-// 快速 UUID
-String fastSimpleUUID()
-
-// 序列 ID
-String getId(SeqType type)
-```
-
-**使用示例**:
-```java
-String uuid = IdUtils.fastSimpleUUID();  // 32 位无横杠 UUID
-String seqId = IdUtils.getId(Seq.uploadSeqType);  // 上传序列 ID
-```
-
-### UUID - UUID 生成器
-
-```java
-// 生成 UUID
-String randomUUID()
-
-// 生成简单 UUID
-String simple()
-```
-
-### Seq - 序列生成器
-
-```java
-// 获取序列 ID
-String getId(SeqType seqType)
-```
+| 工具类 | 核心方法 |
+|--------|----------|
+| `IdUtils` | `simpleUUID()`, `fastSimpleUUID()`, `getId(seqType)` |
+| `UUID` | `randomUUID()`, `simple()` |
+| `Seq` | `getId(seqType)` - 获取序列 ID |
 
 ---
 
 ## 24. DesensitizedUtil - 数据脱敏工具
 
-**核心方法**:
-```java
-// 密码脱敏
-String password(String pwd)
+> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/DesensitizedUtil.java`
 
-// 车牌脱敏
-String carLicense(String license)
-```
+**方法**: `password(pwd)`, `carLicense(license)`
 
 ---
 
 ## 25. DictUtils - 字典工具
 
-**核心方法**:
-```java
-// 根据字典值获取标签
-String getDictLabel(String dictType, String dictValue)
+> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/DictUtils.java`
 
-// 根据字典标签获取值
-String getDictValue(String dictType, String dictLabel)
-
-// 设置字典
-void setDictList(String dictType, List<DictData> list)
-
-// 获取字典
-List<DictData> getDictList(String dictType)
-```
-
-**使用示例**:
-```java
-// 获取字典标签
-String sexLabel = DictUtils.getDictLabel("sys_user_sex", "0");  // "男"
-
-// 导出时使用
-@Excel(name = "性别", readConverterExp = "0=男，1=女")
-private String sex;
-```
+**方法**: `getDictLabel(dictType, dictValue)`, `getDictValue(dictType, dictLabel)`, `setDictList(dictType, list)`, `getDictList(dictType)`
 
 ---
 
@@ -555,12 +244,9 @@ private String sex;
 @PostMapping("/upload")
 public AjaxResult upload(@RequestParam("file") MultipartFile file) {
     try {
-        // 校验文件
         if (file.isEmpty()) {
             return AjaxResult.error("请选择文件");
         }
-        
-        // 上传
         String fileName = FileUploadUtils.upload(file);
         return AjaxResult.success(fileName);
     } catch (Exception e) {
@@ -571,7 +257,6 @@ public AjaxResult upload(@RequestParam("file") MultipartFile file) {
 
 ### 2. HTTP 请求
 ```java
-// 调用外部 API
 String url = "https://api.example.com/user/" + userId;
 String response = HttpUtils.sendGet(url);
 User user = JSON.parseObject(response, User.class);
@@ -584,15 +269,12 @@ User user = JSON.parseObject(response, User.class);
 public AjaxResult login(@RequestBody LoginBody loginBody) {
     String ip = IpUtils.getIpAddr(ServletUtils.getRequest());
     String address = AddressUtils.getRealAddressByIP(ip);
-    
-    // 记录登录日志
     loginService.recordLogin(username, ip, address);
 }
 ```
 
 ### 4. MD5 加密
 ```java
-// 生成令牌
 String token = Md5Utils.hash(username + System.currentTimeMillis());
 ```
 
@@ -604,26 +286,4 @@ public void export(SysUser user, HttpServletResponse response) {
     ExcelUtil<SysUser> util = new ExcelUtil<>(SysUser.class);
     util.exportExcel(response, list, "用户数据");
 }
-```
-
-### 6. 字符串工具
-```java
-// 链式调用
-if (StringUtils.isNotEmpty(userName) && 
-    StringUtils.hasText(userName) &&
-    !StringUtils.containsAny(userName, "<", ">", "'")) {
-    // 处理用户名
-}
-```
-
-### 7. 日期工具
-```java
-// 获取当前时间
-String now = DateUtils.dateTimeNow();
-
-// 格式化日期
-String formatted = DateUtils.parseDateToStr("yyyy-MM-dd", new Date());
-
-// 计算天数
-int days = DateUtils.differentDaysByMillisecond(date1, date2);
 ```

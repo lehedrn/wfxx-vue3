@@ -71,8 +71,6 @@ post.setPostCode("DEV");
 post.setPostName("开发岗位");
 post.setPostSort(1);
 post.setStatus("0");
-
-// 插入数据库
 postMapper.insertPost(post);
 ```
 
@@ -178,7 +176,6 @@ operLog.setBusinessType(BusinessType.INSERT.ordinal());
 operLog.setOperName("admin");
 operLog.setOperUrl("/system/user");
 operLog.setStatus(0);
-
 operLogMapper.insertOperlog(operLog);
 ```
 
@@ -293,43 +290,27 @@ operLogMapper.insertOperlog(operLog);
 
 ### 1. 继承关系
 
-所有业务实体类都继承自 `BaseEntity`，自动拥有创建者、创建时间、更新者、更新时间、备注、删除标志等字段。
+所有业务实体类都继承自 `BaseEntity`（位于 `ruoyi-common` 模块），自动拥有创建者、创建时间、更新者、更新时间、备注、删除标志等字段。
+
+**源码示例**: [`SysPost.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/domain/SysPost.java)
 
 ```java
-// 正确：继承 BaseEntity
 public class SysPost extends BaseEntity implements Serializable {
-    // 业务字段...
+    // 仅定义业务特有字段：postId, postCode, postName, postSort, status, flag
 }
 ```
 
-### 2. 新增操作
+### 2. 使用方式
 
-```java
-SysPost post = new SysPost();
-post.setPostCode("DEV");
-post.setPostName("开发岗位");
-// BaseEntity 字段由框架自动设置
-postMapper.insertPost(post);
-```
+实体类主要用于数据传输，配合 Mapper 使用：
 
-### 3. 修改操作
+- **新增/修改**: 设置业务字段后调用 Mapper 的 `insert`/`update` 方法
+- **删除**: 调用 Mapper 的 `deleteById` 方法（物理删除）或通过 `setDelFlag` 逻辑删除
+- **查询**: Mapper 返回实体对象或列表
 
-```java
-SysPost post = postMapper.selectPostById(postId);
-post.setPostName("高级开发岗位");
-postMapper.updatePost(post);
-```
-
-### 4. 删除操作
-
-```java
-// 逻辑删除（推荐）
-post.setDelFlag("1");
-postMapper.updatePost(post);
-
-// 物理删除
-postMapper.deletePostById(postId);
-```
+**相关源码**:
+- Mapper 接口：`ruoyi-system/src/main/java/com/ruoyi/system/mapper/`
+- 使用示例：[`SysPostServiceImpl.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysPostServiceImpl.java#L162-L177)
 
 ---
 

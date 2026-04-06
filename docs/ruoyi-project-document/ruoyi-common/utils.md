@@ -37,117 +37,53 @@ utils/
 
 ## 1. StringUtils - 字符串工具类
 
-**继承**: `org.apache.commons.lang3.StringUtils`
+> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/StringUtils.java`  
+> 继承：`org.apache.commons.lang3.StringUtils`
 
-### 核心方法
+**核心方法**:
 
-#### 空值判断
-```java
-// 判断是否为空
-boolean isEmpty(String str)           // 空或空白字符串
-boolean isNotEmpty(String str)        // 非空
-boolean isNull(Object object)         // null 判断
-boolean isNotNull(Object object)      // 非 null 判断
-boolean hasText(String str)           // 包含非空白字符
-
-// 获取非空值
-<T> T nvl(T value, T defaultValue)    // 空值替换
-```
+| 类型 | 方法 |
+|------|------|
+| 空值判断 | `isEmpty(str)`, `isNotEmpty(str)`, `isNull(object)`, `isNotNull(object)`, `hasText(str)`, `nvl(value, defaultValue)` |
+| 截取替换 | `substring(str, start/end)`, `substringBetweenLast(str, open, close)`, `replace(text, search, replacement)`, `removeEnd(str, remove)`, `trim(str)` |
+| 隐藏处理 | `hide(str, startInclude, endExclude)` |
+| 格式化 | `format(template, params)` |
+| 转换 | `toCamelCase(str)`, `convertToCamelCase(name)`, `toUnderScoreCase(str)` |
+| 集合转换 | `str2Set(str, sep)`, `str2List(str, sep, filterBlank, trim)` |
+| 匹配判断 | `contains()`, `containsAny()`, `containsAnyIgnoreCase()`, `containsIgnoreCase()`, `equals()`, `equalsAny()`, `equalsAnyIgnoreCase()`, `startsWithAny()`, `startsWithIgnoreCase()`, `endsWith()`, `endsWithAny()`, `endsWithIgnoreCase()` |
+| 路径匹配 | `isMatch(pattern, url)` (Ant 风格), `matches(str, strs)` |
+| 数字补齐 | `padl(num/str, size, c)` |
+| 删除末尾 | `lastStringDel(str, spit)` |
 
 **使用示例**:
 ```java
-StringUtils.isEmpty("")           // true
-StringUtils.isEmpty("  ")         // true
-StringUtils.isEmpty("abc")        // false
+// 空值判断
+StringUtils.isEmpty("")      // true
 StringUtils.nvl(null, "default")  // "default"
-```
 
-#### 截取和替换
-```java
 // 截取
-String substring(String str, int start)
-String substring(String str, int start, int end)
-String substringBetweenLast(String str, String open, String close)
+StringUtils.substring("hello", 0, 3)  // "hel"
 
-// 替换
-String replace(String text, String searchString, String replacement)
-String removeEnd(String str, String remove)
+// 隐藏
+StringUtils.hide("13812341234", 3, 7)  // "138****1234"
 
-// 去空格
-String trim(String str)
+// 格式化
+StringUtils.format("Hello, {}", "World")  // "Hello, World"
+
+// 转换
+StringUtils.toCamelCase("user_name")      // "userName"
+StringUtils.toUnderScoreCase("userName")  // "user_name"
+
+// 路径匹配 (Ant 风格)
+StringUtils.isMatch("/api/*", "/api/users")     // true
+StringUtils.isMatch("/api/**", "/api/users/1")  // true
+
+// 数字补齐
+StringUtils.padl(123, 5, '0')  // "00123"
+
+// 删除末尾分隔符
+StringUtils.lastStringDel("a,b,c,", ",")  // "a,b,c"
 ```
-
-**使用示例**:
-```java
-StringUtils.substring("hello", 0, 3)      // "hel"
-StringUtils.substring("hello", 2)         // "llo"
-StringUtils.trim("  abc  ")               // "abc"
-StringUtils.replace("a.b.c", ".", "/")    // "a/b/c"
-```
-
-#### 隐藏处理
-```java
-String hide(CharSequence str, int startInclude, int endExclude)
-```
-
-**使用示例**:
-```java
-StringUtils.hide("13812341234", 3, 7)     // "138****1234"
-StringUtils.hide("张三", 1, 2)            // "张*"
-```
-
-#### 格式化
-```java
-String format(String template, Object... params)
-```
-
-**使用示例**:
-```java
-StringUtils.format("Hello, {}", "World")         // "Hello, World"
-StringUtils.format("User {} login at {}", name, time)
-```
-
-#### 转换
-```java
-// 下划线转驼峰
-String toCamelCase(String s)           // user_name -> userName
-String convertToCamelCase(String name) // HELLO_WORLD -> HelloWorld
-
-// 驼峰转下划线
-String toUnderScoreCase(String str)    // userName -> user_name
-```
-
-**使用示例**:
-```java
-StringUtils.toCamelCase("user_name")           // "userName"
-StringUtils.toUnderScoreCase("userName")       // "user_name"
-StringUtils.convertToCamelCase("HELLO_WORLD")  // "HelloWorld"
-```
-
-#### 集合转换
-```java
-Set<String> str2Set(String str, String sep)
-List<String> str2List(String str, String sep)
-List<String> str2List(String str, String sep, boolean filterBlank, boolean trim)
-```
-
-**使用示例**:
-```java
-StringUtils.str2Set("a,b,c", ",")           // ["a", "b", "c"]
-StringUtils.str2List("a, b, c", ",", true, true)  // ["a", "b", "c"]
-```
-
-#### 匹配判断
-```java
-boolean contains(CharSequence seq, CharSequence searchSeq)
-boolean containsAny(CharSequence cs, CharSequence... searchCharSequences)
-boolean containsAnyIgnoreCase(CharSequence cs, CharSequence... searchCharSequences)
-boolean containsIgnoreCase(CharSequence str, CharSequence searchStr)
-boolean equals(CharSequence cs1, CharSequence cs2)
-boolean equalsAny(CharSequence string, CharSequence... searchStrings)
-boolean equalsAnyIgnoreCase(CharSequence string, CharSequence... searchStrings)
-boolean startsWithAny(CharSequence sequence, CharSequence... searchStrings)
-boolean startsWithIgnoreCase(CharSequence str, CharSequence prefix)
 boolean endsWith(CharSequence str, CharSequence suffix)
 boolean endsWithAny(CharSequence sequence, CharSequence... searchStrings)
 boolean endsWithIgnoreCase(CharSequence str, CharSequence suffix)
@@ -201,165 +137,91 @@ StringUtils.lastStringDel("hello", ",")      // "hello" (无变化)
 
 ## 2. DateUtils - 日期工具类
 
-**继承**: `org.apache.commons.lang3.time.DateUtils`
+> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/DateUtils.java`  
+> 继承：`org.apache.commons.lang3.time.DateUtils`
 
-### 常用日期格式
-```java
-String YYYY = "yyyy"
-String YYYY_MM = "yyyy-MM"
-String YYYY_MM_DD = "yyyy-MM-dd"
-String YYYYMMDDHHMMSS = "yyyyMMddHHmmss"
-String YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss"
-```
+**常用格式**: `YYYY`, `YYYY_MM`, `YYYY_MM_DD`, `YYYYMMDDHHMMSS`, `YYYY_MM_DD_HH_MM_SS`
 
-### 核心方法
+**核心方法**:
 
-#### 获取当前日期
-```java
-Date getNowDate()                      // 当前 Date
-String getDate()                       // 当前日期 (yyyy-MM-dd)
-String getTime()                       // 当前时间 (yyyy-MM-dd HH:mm:ss)
-String dateTimeNow()                   // 当前时间戳 (yyyyMMddHHmmss)
-String dateTimeNow(String format)      // 指定格式当前时间
-```
+| 类型 | 方法 |
+|------|------|
+| 获取当前 | `getNowDate()`, `getDate()`, `getTime()`, `dateTimeNow()`, `dateTimeNow(format)` |
+| 格式化 | `parseDateToStr(format, date)`, `dateTime(format, ts)`, `parseDate(str)` |
+| 日期路径 | `datePath()`, `dateTime()` |
+| 时间计算 | `getServerStartDate()`, `differentDaysByMillisecond(date1, date2)`, `timeDistance(endDate, startTime)` |
+| Java8 转换 | `toDate(LocalDateTime)`, `toDate(LocalDate)` |
 
 **使用示例**:
 ```java
 DateUtils.getDate()           // "2024-01-01"
 DateUtils.getTime()           // "2024-01-01 12:30:00"
 DateUtils.dateTimeNow()       // "20240101123000"
-```
-
-#### 日期格式化
-```java
-String parseDateToStr(String format, Date date)
-Date dateTime(String format, String ts)
-Date parseDate(Object str)
-```
-
-**使用示例**:
-```java
 DateUtils.parseDateToStr("yyyy-MM-dd", new Date())
-DateUtils.dateTime("yyyy-MM-dd", "2024-01-01")
-DateUtils.parseDate("2024-01-01")  // 支持多种格式
-```
+DateUtils.differentDaysByMillisecond(date1, date2)  // 相差天数
+DateUtils.timeDistance(endDate, startTime)  // "1 天 2 小时 30 分钟"
 
-#### 日期路径
-```java
-String datePath()     // 2018/08/08
-String dateTime()     // 20180808
-```
-
-#### 时间计算
-```java
-Date getServerStartDate()                          // 服务器启动时间
-int differentDaysByMillisecond(Date date1, Date date2)  // 相差天数
-String timeDistance(Date endDate, Date startTime)  // 时间差（天/小时/分钟）
-```
-
-**使用示例**:
-```java
-long days = DateUtils.differentDaysByMillisecond(date1, date2)
-String distance = DateUtils.timeDistance(endDate, startTime)  // "1 天 2 小时 30 分钟"
-```
-
-#### Java8 时间转换
-```java
-Date toDate(LocalDateTime temporalAccessor)
-Date toDate(LocalDate temporalAccessor)
-```
-
-**使用示例**:
-```java
-// LocalDateTime 转 Date
+// Java8 转换
 LocalDateTime ldt = LocalDateTime.now();
 Date date1 = DateUtils.toDate(ldt);
-
-// LocalDate 转 Date (时间默认为 00:00:00)
-LocalDate ld = LocalDate.now();
-Date date2 = DateUtils.toDate(ld);
 ```
 
 ---
 
 ## 3. SecurityUtils - 安全服务工具类
 
-### 用户信息获取
-```java
-Long getUserId()              // 获取当前登录用户 ID
-Long getDeptId()              // 获取当前登录部门 ID
-String getUsername()          // 获取当前登录用户名
-LoginUser getLoginUser()      // 获取当前登录用户对象
-Authentication getAuthentication()  // 获取认证信息
-```
+> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/SecurityUtils.java`
+
+**核心方法**:
+
+| 类型 | 方法 |
+|------|------|
+| 用户信息 | `getUserId()`, `getDeptId()`, `getUsername()`, `getLoginUser()`, `getAuthentication()` |
+| 密码处理 | `encryptPassword(password)` (BCrypt), `matchesPassword(raw, encoded)` |
+| 权限校验 | `isAdmin()`, `isAdmin(userId)`, `hasPermi(permission)`, `hasPermi(auth, perm)`, `hasRole(role)`, `hasRole(roles, role)` |
 
 **使用示例**:
 ```java
-// Controller 中获取用户信息
+// 获取用户信息
 Long userId = SecurityUtils.getUserId();
-String username = SecurityUtils.getUsername();
 LoginUser user = SecurityUtils.getLoginUser();
-```
 
-### 密码处理
-```java
-String encryptPassword(String password)           // BCrypt 加密
-boolean matchesPassword(String raw, String encoded)  // 密码校验
-```
-
-**使用示例**:
-```java
-// 注册时加密密码
+// 密码处理
 String encrypted = SecurityUtils.encryptPassword(password);
-
-// 登录时校验密码
 boolean matches = SecurityUtils.matchesPassword(rawPassword, encryptedPassword);
-```
 
-### 权限校验
-```java
-boolean isAdmin()                          // 是否管理员
-boolean isAdmin(Long userId)               // 指定用户是否管理员
-boolean hasPermi(String permission)        // 是否有权限
-boolean hasPermi(Collection<String> auth, String perm)  // 权限集合校验
-boolean hasRole(String role)               // 是否有角色
-boolean hasRole(Collection<String> roles, String role)  // 角色集合校验
-```
-
-**使用示例**:
-```java
-// 检查是否管理员
-if (SecurityUtils.isAdmin()) {
-    // 管理员操作
-}
-
-// 检查权限
-if (SecurityUtils.hasPermi("system:user:add")) {
-    // 有添加权限
-}
-
-// 检查角色
-if (SecurityUtils.hasRole("admin")) {
-    // 管理员角色
-}
+// 权限检查
+if (SecurityUtils.isAdmin()) { }
+if (SecurityUtils.hasPermi("system:user:add")) { }
+if (SecurityUtils.hasRole("admin")) { }
 ```
 
 ---
 
 ## 4. ServletUtils - Servlet 工具类
 
-### 获取请求对象
-```java
-HttpServletRequest getRequest()
-HttpServletResponse getResponse()
-HttpSession getSession()
-ServletRequestAttributes getRequestAttributes()
-```
+> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/ServletUtils.java`
+
+**核心方法**:
+
+| 类型 | 方法 |
+|------|------|
+| 获取对象 | `getRequest()`, `getResponse()`, `getSession()`, `getRequestAttributes()` |
+| 参数获取 | `getParameter(name)`, `getParameter(name, default)`, `getParameterToInt(name)`, `getParameterToBool(name)`, `getParams(request)`, `getParamMap(request)` |
+| 响应处理 | `renderString(response, string)` |
+| 请求判断 | `isAjaxRequest(request)` |
+| URL 编解码 | `urlEncode(str)`, `urlDecode(str)` |
 
 **使用示例**:
 ```java
 HttpServletRequest request = ServletUtils.getRequest();
 String token = request.getHeader("Authorization");
+
+String pageNum = ServletUtils.getParameter("pageNum", "1");
+Integer pageSize = ServletUtils.getParameterToInt("pageSize", 10);
+
+// 返回 JSON
+ServletUtils.renderString(response, JSONObject.toJSONString(result));
 ```
 
 ### 获取请求参数
@@ -393,167 +255,17 @@ ServletUtils.renderString(response, JSONObject.toJSONString(result));
 ```
 
 ### 请求判断
-```java
-boolean isAjaxRequest(HttpServletRequest request)
-```
+`isAjaxRequest(request)`
 
 ### URL 编解码
-```java
-String urlEncode(String str)
-String urlDecode(String str)
-```
+`urlEncode(str)`, `urlDecode(str)`
 
 ---
 
-## 5. Arith - 精确计算工具
+## 最佳实践
 
-**用途**: 精确的浮点数运算，避免精度丢失
-
-### 核心方法
-```java
-// 加法
-static double add(double v1, double v2)
-
-// 减法
-static double sub(double v1, double v2)
-
-// 乘法
-static double mul(double v1, double v2)
-
-// 除法
-static double div(double v1, double v2)
-static double div(double v1, double v2, int scale)
-
-// 四舍五入
-static double round(double v, int scale)
-```
-
-**使用示例**:
-```java
-// 普通计算会有精度问题
-0.1 + 0.2  // 0.30000000000000004
-
-// 使用 Arith
-Arith.add(0.1, 0.2)  // 0.3
-Arith.mul(0.1, 0.2)  // 0.02
-Arith.div(1.0, 3, 2) // 0.33
-```
-
----
-
-## 6. ExceptionUtil - 异常工具类
-
-### 获取错误消息
-```java
-String getExceptionMessage(Throwable e)
-```
-
-### 获取堆栈信息
-```java
-String getStackTrace(Throwable e)
-```
-
-**使用示例**:
-```java
-try {
-    // 可能抛出异常的代码
-} catch (Exception e) {
-    log.error(ExceptionUtil.getExceptionMessage(e));
-    log.error(ExceptionUtil.getStackTrace(e));
-}
-```
-
----
-
-## 7. MessageUtils - 消息工具类
-
-**用途**: 国际化消息处理
-
-### 核心方法
-```java
-String message(String code, Object... args)
-```
-
-**使用示例**:
-```java
-// 从 messages.properties 获取消息
-String msg = MessageUtils.message("user.not.exists");
-String msg = MessageUtils.message("user.password.retry.limit.exceed", 5);
-```
-
----
-
-## 8. DictUtils - 字典工具类
-
-**用途**: 字典数据缓存和获取
-
-### 核心方法
-```java
-String getDictLabel(String dictType, String dictValue)
-String getDictValue(String dictType, String dictLabel)
-```
-
-**使用示例**:
-```java
-// 根据字典值获取标签
-String label = DictUtils.getDictLabel("sys_user_sex", "0");  // "男"
-
-// 根据字典标签获取值
-String value = DictUtils.getDictValue("sys_user_sex", "男");  // "0"
-```
-
----
-
-## 9. LogUtils - 日志工具类
-
-### 获取请求信息
-```java
-String getRequestLog(HttpServletRequest request)
-```
-
-### 记录操作日志
-```java
-void recordLog(OperLogModel operLog, Date startTime, Long timeMs)
-```
-
----
-
-## 10. PageUtils - 分页工具类
-
-### 开启分页
-```java
-void startPage()
-```
-
-### 清理分页
-```java
-void clearPage()
-```
-
-**使用示例**:
-```java
-// Service 层
-PageUtils.startPage();
-List<SysUser> list = userMapper.selectList();
-PageInfo<SysUser> pageInfo = new PageInfo<>(list);
-PageUtils.clearPage();
-```
-
----
-
-## 11. Threads - 线程工具类
-
-### 休眠
-```java
-void sleep(long milliseconds)
-```
-
-### 关闭线程池
-```java
-void shutdownAndAwaitTermination(ExecutorService pool)
-```
-
-### Runnable 转 Callable
-```java
-<T> Callable<T> callable(Runnable task, T result)
-```
+1. **字符串处理**: 使用 `StringUtils` 避免 NPE，优先使用 `isEmpty()` 而非 `== null`
+2. **日期处理**: 统一使用 `DateUtils` 格式化，避免直接使用 `SimpleDateFormat`
+3. **精确计算**: 金额计算必须使用 `Arith` 避免精度丢失
+4. **权限检查**: 使用 `SecurityUtils.hasPermi()` 进行权限控制
+5. **Servlet 获取**: 非 Controller 环境使用 `ServletUtils.getRequest()` 获取请求

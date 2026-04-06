@@ -8,11 +8,12 @@
 
 ### 1. RuoYiConfig - 项目配置类
 
-**用途**: 读取 `application.yml` 或 `application.properties` 中配置的若依项目相关参数
+> 源码：`ruoyi-common/config/src/main/java/com/ruoyi/common/config/RuoYiConfig.java`
+
+**用途**: 读取 `application.yml` 中配置的若依项目相关参数
 
 **配置前缀**: `ruoyi`
 
-**属性**:
 | 属性 | 类型 | 说明 | 示例 |
 |------|------|------|------|
 | name | String | 项目名称 | 若依 |
@@ -22,29 +23,7 @@
 | addressEnabled | boolean | 获取地址开关（静态） | true |
 | captchaType | String | 验证码类型（静态） | math |
 
-**静态方法**:
-```java
-// 获取上传路径
-String getProfile()
-
-// 是否启用地址获取
-boolean isAddressEnabled()
-
-// 获取验证码类型
-String getCaptchaType()
-
-// 获取导入路径
-String getImportPath()
-
-// 获取头像上传路径
-String getAvatarPath()
-
-// 获取下载路径
-String getDownloadPath()
-
-// 获取上传路径
-String getUploadPath()
-```
+**静态方法**: `getProfile()`, `isAddressEnabled()`, `getCaptchaType()`, `getImportPath()`, `getAvatarPath()`, `getDownloadPath()`, `getUploadPath()`
 
 **配置示例** (application.yml):
 ```yaml
@@ -78,6 +57,8 @@ String captchaType = RuoYiConfig.getCaptchaType();  // "math" 或 "char"
 
 ### 2. SensitiveJsonSerializer - 敏感数据序列化器
 
+> 源码：`ruoyi-common/config/src/main/java/com/ruoyi/common/config/SensitiveJsonSerializer.java`
+
 **用途**: Jackson 序列化器，用于处理 `@Sensitive` 注解的字段脱敏
 
 **核心逻辑**:
@@ -100,12 +81,11 @@ public class SensitiveJsonSerializer extends JsonSerializer<String>
     }
     
     /**
-     * 是否需要脱敏处理
+     * 是否需要脱敏处理 - 管理员不脱敏
      */
     private boolean desensitization() {
         try {
             LoginUser loginUser = SecurityUtils.getLoginUser();
-            // 管理员不脱敏
             return !loginUser.getUser().isAdmin();
         } catch (Exception e) {
             return true;
@@ -139,47 +119,35 @@ public class UserVO {
 ```yaml
 # 若依配置
 ruoyi:
-  # 项目名称
   name: 若依
-  # 版本
   version: 3.9.2
-  # 版权年份
   copyrightYear: 2024
-  # 上传路径（绝对路径）
   profile: /home/ruoyi/upload
-  # 是否启用地址查询
   addressEnabled: true
-  # 验证码类型 (math 数字计算 char 字符验证)
   captchaType: math
 
 # Spring 配置
 spring:
-  # 数据源配置
   datasource:
     dynamic:
-      enabled: true  # 是否启用多数据源
-      primary: MASTER  # 默认数据源
-      
-  # Redis 配置
+      enabled: true
+      primary: MASTER
   redis:
     host: localhost
     port: 6379
-    password: 
-    database: 0
-    
-  # 文件上传配置
   servlet:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
 ```
 
+> 更多配置见项目主配置文件：`ruoyi-admin/src/main/resources/application.yml`
+
 ---
 
 ## 配置使用场景
 
 ### 1. 文件上传路径配置
-
 ```java
 // 文件上传工具类使用
 public class FileUploadUtils {
@@ -192,11 +160,9 @@ public class FileUploadUtils {
 ```
 
 ### 2. 头像上传
-
 ```java
 @PostMapping("/avatar")
 public AjaxResult updateAvatar(@RequestParam MultipartFile file) {
-    // 头像保存路径：/home/ruoyi/upload/avatar/
     String avatarPath = RuoYiConfig.getAvatarPath();
     String fileName = FileUploadUtils.upload(avatarPath, file);
     return AjaxResult.success(fileName);
@@ -204,15 +170,12 @@ public AjaxResult updateAvatar(@RequestParam MultipartFile file) {
 ```
 
 ### 3. IP 地址查询开关
-
 ```java
 public class AddressUtils {
     public static String getRealAddressByIP(String ip) {
-        // 内网不查询
         if (IpUtils.internalIp(ip)) {
             return "内网 IP";
         }
-        // 根据配置决定是否查询
         if (RuoYiConfig.isAddressEnabled()) {
             // 查询逻辑
         }
@@ -222,21 +185,19 @@ public class AddressUtils {
 ```
 
 ### 4. 验证码类型配置
-
 ```java
 @GetMapping("/captchaImage")
 public AjaxResult getCaptchaImg() throws IOException {
     String type = RuoYiConfig.getCaptchaType();
-    
     if ("math".equals(type)) {
-        // 数字计算验证码
         return createMathCaptcha();
     } else {
-        // 字符验证码
         return createCharCaptcha();
     }
 }
 ```
+
+> 更多使用示例见源码：`ruoyi-admin/src/main/java/com/ruoyi`
 
 ---
 
@@ -251,7 +212,7 @@ public AjaxResult getCaptchaImg() throws IOException {
 
 ## 相关配置类
 
-除了 `RuoYiConfig`，项目还可能包含以下配置类（根据项目实际需求）：
+以下配置类位于主项目 `ruoyi-admin` 的 `config` 包中：
 
 - **JwtConfig** - JWT Token 配置
 - **SecurityConfig** - Spring Security 安全配置
@@ -259,4 +220,4 @@ public AjaxResult getCaptchaImg() throws IOException {
 - **MybatisPlusConfig** - MyBatis-Plus 配置
 - **ThreadPoolConfig** - 线程池配置
 
-这些配置类通常位于主项目的 `config` 包中，而不是 `ruoyi-common` 模块。
+> 完整配置见：`ruoyi-admin/src/main/java/com/ruoyi/web/core/config/`

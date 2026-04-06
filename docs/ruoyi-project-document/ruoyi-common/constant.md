@@ -8,84 +8,38 @@
 
 ### 1. Constants - 通用常量
 
+> 源码：`ruoyi-common/constant/src/main/java/com/ruoyi/common/constant/Constants.java`
+
 **核心常量**:
-```java
-// 字符集
-UTF8 = "UTF-8"
-GBK = "GBK"
-
-// 系统语言
-DEFAULT_LOCALE = Locale.SIMPLIFIED_CHINESE
-
-// URL 协议
-HTTP = "http://"
-HTTPS = "https://"
-WWW = "www."
-
-// 通用标识
-SUCCESS = "0"      // 成功
-FAIL = "1"         // 失败
-
-// 登录相关
-LOGIN_SUCCESS = "Success"
-LOGIN_FAIL = "Error"
-LOGOUT = "Logout"
-REGISTER = "Register"
-
-// 权限相关
-ALL_PERMISSION = "*:*:*"     // 所有权限
-SUPER_ADMIN = "admin"         // 管理员角色
-ROLE_DELIMITER = ","          // 角色分隔符
-PERMISSION_DELIMITER = ","    // 权限分隔符
-
-// 验证码
-CAPTCHA_EXPIRATION = 2  // 有效期 2 分钟
-
-// Token 相关
-TOKEN = "token"
-TOKEN_PREFIX = "Bearer "
-LOGIN_USER_KEY = "login_user_key"
-
-// JWT Claims
-JWT_USERID = "userid"
-JWT_USERNAME = "sub"       // 主题字段
-JWT_AVATAR = "avatar"
-JWT_CREATED = "created"
-JWT_AUTHORITIES = "authorities"
-
-// 资源映射
-RESOURCE_PREFIX = "/profile"
-```
+| 常量 | 值/说明 |
+|------|--------|
+| UTF8 / GBK | 字符集 |
+| DEFAULT_LOCALE | 系统语言（简体中文） |
+| HTTP / HTTPS / WWW | URL 协议 |
+| SUCCESS / FAIL | 成功/失败标识 ("0"/"1") |
+| LOGIN_SUCCESS / LOGIN_FAIL | 登录成功/失败 |
+| ALL_PERMISSION | 所有权限 ("*:*:*") |
+| SUPER_ADMIN | 管理员角色 ("admin") |
+| CAPTCHA_EXPIRATION | 验证码有效期 (2 分钟) |
+| TOKEN / TOKEN_PREFIX | Token 相关 |
+| JWT_USERID / JWT_USERNAME / JWT_AVATAR | JWT Claims |
+| RESOURCE_PREFIX | 资源映射 ("/profile") |
 
 **安全白名单**:
-```java
-// JSON 解析白名单
-JSON_WHITELIST_STR = { "com.ruoyi" }
-
-// 定时任务白名单
-JOB_WHITELIST_STR = { "com.ruoyi.quartz.task" }
-
-// 定时任务违规字符（禁止使用）
-JOB_ERROR_STR = { 
-    "java.net.URL", 
-    "javax.naming.InitialContext", 
-    "org.yaml.snakeyaml",
-    "org.springframework", 
-    "org.apache", 
-    "com.ruoyi.common.utils.file", 
-    "com.ruoyi.common.config", 
-    "com.ruoyi.generator" 
-}
-```
+| 白名单 | 说明 |
+|--------|------|
+| JSON_WHITELIST_STR | JSON 解析白名单 ("com.ruoyi") |
+| JOB_WHITELIST_STR | 定时任务白名单 ("com.ruoyi.quartz.task") |
+| JOB_ERROR_STR | 定时任务违规字符（禁止使用）|
 
 **部门常量 (Dept 内部类)**:
-```java
-DATA_SCOPE_ALL = "1"              // 全部数据权限
-DATA_SCOPE_CUSTOM = "2"           // 自定义数据权限
-DATA_SCOPE_DEPT = "3"             // 部门数据权限
-DATA_SCOPE_DEPT_AND_CHILD = "4"   // 部门及以下数据权限
-DATA_SCOPE_SELF = "5"             // 仅本人数据权限
-```
+| 常量 | 说明 |
+|------|------|
+| DATA_SCOPE_ALL | 全部数据权限 |
+| DATA_SCOPE_CUSTOM | 自定义数据权限 |
+| DATA_SCOPE_DEPT | 部门数据权限 |
+| DATA_SCOPE_DEPT_AND_CHILD | 部门及以下数据权限 |
+| DATA_SCOPE_SELF | 仅本人数据权限 |
 
 **使用示例**:
 ```java
@@ -107,42 +61,26 @@ String token = Constants.TOKEN_PREFIX + jwtToken;
 
 ### 2. HttpStatus - HTTP 状态码
 
-**成功状态**:
-```java
-SUCCESS = 200           // 操作成功
-CREATED = 201           // 对象创建成功
-ACCEPTED = 202          // 请求已接受
-NO_CONTENT = 204        // 无返回数据
-```
+> 源码：`ruoyi-common/constant/src/main/java/com/ruoyi/common/constant/HttpStatus.java`
 
-**重定向**:
-```java
-MOVED_PERM = 301        // 永久重定向
-SEE_OTHER = 303         // 查看其他资源
-NOT_MODIFIED = 304      // 资源未修改
-```
-
-**客户端错误**:
-```java
-BAD_REQUEST = 400       // 参数错误
-UNAUTHORIZED = 401      // 未授权
-FORBIDDEN = 403         // 访问受限
-NOT_FOUND = 404         // 资源未找到
-BAD_METHOD = 405        // 方法不允许
-CONFLICT = 409          // 资源冲突
-UNSUPPORTED_TYPE = 415  // 不支持的媒体类型
-```
-
-**服务器错误**:
-```java
-ERROR = 500             // 系统内部错误
-NOT_IMPLEMENTED = 501   // 接口未实现
-```
-
-**自定义状态**:
-```java
-WARN = 601              // 警告消息
-```
+| 类型 | 状态码 | 说明 |
+|------|--------|------|
+| **成功** | SUCCESS=200 | 操作成功 |
+| | CREATED=201 | 创建成功 |
+| | ACCEPTED=202 | 请求已接受 |
+| | NO_CONTENT=204 | 无返回数据 |
+| **重定向** | MOVED_PERM=301 | 永久重定向 |
+| | SEE_OTHER=303 | 查看其他资源 |
+| | NOT_MODIFIED=304 | 资源未修改 |
+| **客户端错误** | BAD_REQUEST=400 | 参数错误 |
+| | UNAUTHORIZED=401 | 未授权 |
+| | FORBIDDEN=403 | 访问受限 |
+| | NOT_FOUND=404 | 资源未找到 |
+| | CONFLICT=409 | 资源冲突 |
+| | UNSUPPORTED_TYPE=415 | 不支持的媒体类型 |
+| **服务器错误** | ERROR=500 | 系统内部错误 |
+| | NOT_IMPLEMENTED=501 | 接口未实现 |
+| **自定义** | WARN=601 | 警告消息 |
 
 **使用示例**:
 ```java
@@ -160,69 +98,40 @@ return new AjaxResult(HttpStatus.WARN, "警告信息", data);
 
 ### 3. UserConstants - 用户相关常量
 
-**系统用户**:
-```java
-SYS_USER = "SYS_USER"   // 系统用户标识
-```
+> 源码：`ruoyi-common/constant/src/main/java/com/ruoyi/common/constant/UserConstants.java`
 
 **状态常量**:
-```java
-// 通用状态
-NORMAL = "0"      // 正常
-EXCEPTION = "1"   // 异常
-
-// 用户状态
-USER_DISABLE = "1"  // 用户封禁
-
-// 角色状态
-ROLE_NORMAL = "0"     // 正常
-ROLE_DISABLE = "1"    // 封禁
-
-// 部门状态
-DEPT_NORMAL = "0"     // 正常
-DEPT_DISABLE = "1"    // 停用
-
-// 字典状态
-DICT_NORMAL = "0"     // 正常
-```
+| 常量 | 值 | 说明 |
+|------|-----|------|
+| NORMAL / EXCEPTION | "0" / "1" | 正常/异常 |
+| USER_DISABLE | "1" | 用户封禁 |
+| ROLE_NORMAL / ROLE_DISABLE | "0" / "1" | 角色正常/封禁 |
+| DEPT_NORMAL / DEPT_DISABLE | "0" / "1" | 部门正常/停用 |
+| DICT_NORMAL | "0" | 字典正常 |
 
 **是否标识**:
-```java
-YES = "Y"             // 是
-YES_FRAME = "0"       // 是（菜单外链）
-NO_FRAME = "1"        // 否（菜单外链）
-```
+| 常量 | 值 | 说明 |
+|------|-----|------|
+| YES | "Y" | 是 |
+| YES_FRAME / NO_FRAME | "0" / "1" | 菜单外链是/否 |
 
 **菜单类型**:
-```java
-TYPE_DIR = "M"        // 目录
-TYPE_MENU = "C"       // 菜单
-TYPE_BUTTON = "F"     // 按钮
-```
+| 常量 | 值 | 说明 |
+|------|-----|------|
+| TYPE_DIR / TYPE_MENU / TYPE_BUTTON | "M" / "C" / "F" | 目录/菜单/按钮 |
 
 **菜单组件**:
-```java
-LAYOUT = "Layout"         // 布局组件
-PARENT_VIEW = "ParentView" // 父级视图
-INNER_LINK = "InnerLink"   // 内链
-```
-
-**校验结果**:
-```java
-UNIQUE = true         // 唯一
-NOT_UNIQUE = false    // 不唯一
-```
+| 常量 | 说明 |
+|------|------|
+| LAYOUT | 布局组件 |
+| PARENT_VIEW | 父级视图 |
+| INNER_LINK | 内链 |
 
 **长度限制**:
-```java
-// 用户名长度
-USERNAME_MIN_LENGTH = 2
-USERNAME_MAX_LENGTH = 20
-
-// 密码长度
-PASSWORD_MIN_LENGTH = 5
-PASSWORD_MAX_LENGTH = 20
-```
+| 常量 | 值 | 说明 |
+|------|-----|------|
+| USERNAME_MIN_LENGTH / MAX_LENGTH | 2 / 20 | 用户名长度 |
+| PASSWORD_MIN_LENGTH / MAX_LENGTH | 5 / 20 | 密码长度 |
 
 **使用示例**:
 ```java
@@ -244,131 +153,72 @@ return userService.checkUserNameUnique(user) ? UserConstants.UNIQUE : UserConsta
 
 ### 4. GenConstants - 代码生成常量
 
-**模板类型**:
-```java
-TPL_CRUD = "crud"     // 单表增删改查
-TPL_TREE = "tree"     // 树表增删改查
-TPL_SUB = "sub"       // 主子表增删改查
-```
+> 源码：`ruoyi-common/constant/src/main/java/com/ruoyi/common/constant/GenConstants.java`
 
-**树表字段**:
-```java
-TREE_CODE = "treeCode"           // 树编码字段
-TREE_PARENT_CODE = "treeParentCode" // 树父编码字段
-TREE_NAME = "treeName"           // 树名称字段
-PARENT_MENU_ID = "parentMenuId"  // 上级菜单 ID
-PARENT_MENU_NAME = "parentMenuName" // 上级菜单名称
-```
+**模板类型**:
+| 常量 | 说明 |
+|------|------|
+| TPL_CRUD | 单表增删改查 |
+| TPL_TREE | 树表增删改查 |
+| TPL_SUB | 主子表增删改查 |
+
+**树表字段**: TREE_CODE, TREE_PARENT_CODE, TREE_NAME, PARENT_MENU_ID, PARENT_MENU_NAME
 
 **数据库类型映射**:
-```java
-// 字符串类型
-COLUMNTYPE_STR = { "char", "varchar", "nvarchar", "varchar2" }
+| 类型 | 字段 |
+|------|------|
+| COLUMNTYPE_STR | char, varchar, nvarchar, varchar2 |
+| COLUMNTYPE_TEXT | tinytext, text, mediumtext, longtext |
+| COLUMNTYPE_TIME | datetime, time, date, timestamp |
+| COLUMNTYPE_NUMBER | tinyint, smallint, mediumint, int, number, integer, bit, bigint, float, double, decimal |
 
-// 文本类型
-COLUMNTYPE_TEXT = { "tinytext", "text", "mediumtext", "longtext" }
-
-// 时间类型
-COLUMNTYPE_TIME = { "datetime", "time", "date", "timestamp" }
-
-// 数字类型
-COLUMNTYPE_NUMBER = { "tinyint", "smallint", "mediumint", "int", 
-                      "number", "integer", "bit", "bigint", 
-                      "float", "double", "decimal" }
-```
-
-**页面字段过滤**:
-```java
-// 不需要编辑的字段
-COLUMNNAME_NOT_EDIT = { "id", "create_by", "create_time", "del_flag" }
-
-// 不需要列表显示的字段
-COLUMNNAME_NOT_LIST = { "id", "create_by", "create_time", "del_flag", 
-                        "update_by", "update_time" }
-
-// 不需要查询的字段的字段
-COLUMNNAME_NOT_QUERY = { "id", "create_by", "create_time", "del_flag", 
-                         "update_by", "update_time", "remark" }
-```
-
-**基类字段**:
-```java
-BASE_ENTITY = { "createBy", "createTime", "updateBy", "updateTime", "remark" }
-TREE_ENTITY = { "parentName", "parentId", "orderNum", "ancestors", "children" }
-```
+**字段过滤**:
+| 常量 | 说明 |
+|------|------|
+| COLUMNNAME_NOT_EDIT | 不需要编辑的字段 (id, create_by, create_time, del_flag) |
+| COLUMNNAME_NOT_LIST | 不需要列表显示的字段 |
+| COLUMNNAME_NOT_QUERY | 不需要查询的字段 |
 
 **HTML 控件类型**:
-```java
-HTML_INPUT = "input"           // 文本框
-HTML_TEXTAREA = "textarea"     // 文本域
-HTML_SELECT = "select"         // 下拉框
-HTML_RADIO = "radio"           // 单选框
-HTML_CHECKBOX = "checkbox"     // 复选框
-HTML_DATETIME = "datetime"     // 日期控件
-HTML_IMAGE_UPLOAD = "imageUpload" // 图片上传
-HTML_FILE_UPLOAD = "fileUpload"   // 文件上传
-HTML_EDITOR = "editor"         // 富文本
-```
-
-**Java 类型映射**:
-```java
-TYPE_STRING = "String"
-TYPE_INTEGER = "Integer"
-TYPE_LONG = "Long"
-TYPE_DOUBLE = "Double"
-TYPE_BIGDECIMAL = "BigDecimal"
-TYPE_DATE = "Date"
-```
-
-**查询类型**:
-```java
-QUERY_LIKE = "LIKE"  // 模糊查询
-QUERY_EQ = "EQ"      // 相等查询
-```
-
-**其他**:
-```java
-REQUIRE = "1"  // 必填
-```
+| 类型 | 说明 |
+|------|------|
+| HTML_INPUT / TEXTAREA / SELECT | 文本框/文本域/下拉框 |
+| HTML_RADIO / CHECKBOX / DATETIME | 单选/复选/日期控件 |
+| HTML_IMAGE_UPLOAD / FILE_UPLOAD / EDITOR | 图片上传/文件上传/富文本 |
 
 ---
 
 ### 5. ScheduleConstants - 定时任务常量
 
-**任务属性**:
-```java
-TASK_CLASS_NAME = "TASK_CLASS_NAME"  // 任务类名
-TASK_PROPERTIES = "TASK_PROPERTIES"  // 任务属性
-```
+> 源码：`ruoyi-common/constant/src/main/java/com/ruoyi/common/constant/ScheduleConstants.java`
+
+**任务属性**: TASK_CLASS_NAME (任务类名), TASK_PROPERTIES (任务属性)
 
 **Misfire 策略**:
-```java
-MISFIRE_DEFAULT = "0"              // 默认
-MISFIRE_IGNORE_MISFIRES = "1"      // 忽略 Misfire，立即执行
-MISFIRE_FIRE_AND_PROCEED = "2"     // 触发一次后继续
-MISFIRE_DO_NOTHING = "3"           // 不触发立即执行
-```
+| 常量 | 说明 |
+|------|------|
+| MISFIRE_DEFAULT | 默认 |
+| MISFIRE_IGNORE_MISFIRES | 忽略 Misfire，立即执行 |
+| MISFIRE_FIRE_AND_PROCEED | 触发一次后继续 |
+| MISFIRE_DO_NOTHING | 不触发立即执行 |
 
-**任务状态 (Status 枚举)**:
-```java
-NORMAL = "0"    // 正常
-PAUSE = "1"     // 暂停
-```
+**任务状态**: NORMAL(0-正常), PAUSE(1-暂停)
 
 ---
 
 ### 6. CacheConstants - 缓存 Key 常量
 
-**Redis Key 定义**:
-```java
-LOGIN_TOKEN_KEY = "login_tokens:"        // 登录用户 Token
-CAPTCHA_CODE_KEY = "captcha_codes:"      // 验证码
-SYS_CONFIG_KEY = "sys_config:"           // 系统配置
-SYS_DICT_KEY = "sys_dict:"               // 系统字典
-REPEAT_SUBMIT_KEY = "repeat_submit:"     // 防重复提交
-RATE_LIMIT_KEY = "rate_limit:"           // 限流
-PWD_ERR_CNT_KEY = "pwd_err_cnt:"         // 密码错误次数
-```
+> 源码：`ruoyi-common/constant/src/main/java/com/ruoyi/common/constant/CacheConstants.java`
+
+| 常量 | 前缀 | 说明 |
+|------|------|------|
+| LOGIN_TOKEN_KEY | login_tokens: | 登录用户 Token |
+| CAPTCHA_CODE_KEY | captcha_codes: | 验证码 |
+| SYS_CONFIG_KEY | sys_config: | 系统配置 |
+| SYS_DICT_KEY | sys_dict: | 系统字典 |
+| REPEAT_SUBMIT_KEY | repeat_submit: | 防重复提交 |
+| RATE_LIMIT_KEY | rate_limit: | 限流 |
+| PWD_ERR_CNT_KEY | pwd_err_cnt: | 密码错误次数 |
 
 **使用示例**:
 ```java
@@ -381,6 +231,7 @@ String captcha = redisCache.getCacheObject(CacheConstants.CAPTCHA_CODE_KEY + uui
 // 删除用户缓存
 redisCache.deleteObject(CacheConstants.LOGIN_TOKEN_KEY + token);
 ```
+> 更多 Redis 操作见 `ruoyi-common/core/src/main/java/com/ruoyi/common/core/redis/RedisCache.java`
 
 ---
 

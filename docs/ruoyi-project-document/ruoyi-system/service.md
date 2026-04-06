@@ -80,25 +80,25 @@ service/
 
 **源码**: [`SysPostServiceImpl.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysPostServiceImpl.java)
 
-**删除岗位前的使用检查**:
+**删除岗位前的使用检查** (第 142-153 行):
 
 ```java
 @Override
-@Transactional(rollbackFor = Exception.class)
-public int deletePostById(Long postId) {
-    // 检查岗位是否已被用户使用
-    if (countUserPostById(postId) > 0) {
+public int deletePostByIds(Long[] postIds) {
+    for (Long postId : postIds) {
         SysPost post = selectPostById(postId);
-        throw new ServiceException(String.format("%1$s已分配，不能删除", post.getPostName()));
+        if (countUserPostById(postId) > 0) {
+            throw new ServiceException(String.format("%1$s已分配，不能删除", post.getPostName()));
+        }
     }
-    return postMapper.deletePostById(postId);
+    return postMapper.deletePostByIds(postIds);
 }
 ```
 
 **要点**:
-- 使用 `@Transactional` 确保原子性
-- 删除前校验业务规则
+- 批量删除前逐个校验岗位是否已被用户使用
 - 抛出 `ServiceException` 给出友好提示
+- 方法未使用 `@Transactional`，如需事务控制可自行添加
 
 ---
 
@@ -106,7 +106,7 @@ public int deletePostById(Long postId) {
 
 **源码**: [`SysConfigServiceImpl.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysConfigServiceImpl.java)
 
-**查询参数（先查缓存，缓存不存在查数据库）**:
+**查询参数（先查缓存，缓存不存在查数据库）** (第 62-78 行):
 
 ```java
 @Override
@@ -116,7 +116,6 @@ public String selectConfigByKey(String configKey) {
     if (StringUtils.isNotEmpty(configValue)) {
         return configValue;
     }
-    
     // 2. 缓存不存在，查询数据库
     SysConfig config = new SysConfig();
     config.setConfigKey(configKey);
@@ -130,7 +129,7 @@ public String selectConfigByKey(String configKey) {
 }
 ```
 
-**修改配置（同步更新缓存）**:
+**修改配置（同步更新缓存）** (第 132-146 行):
 
 ```java
 @Override
@@ -160,27 +159,19 @@ public int updateConfig(SysConfig config) {
 
 **源码**: [`SysNoticeReadServiceImpl.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysNoticeReadServiceImpl.java)
 
-**批量标记已读**:
+**批量标记已读** (第 56-63 行):
 
 ```java
 @Override
-@Transactional(rollbackFor = Exception.class)
 public void markReadBatch(Long userId, Long[] noticeIds) {
-    for (Long noticeId : noticeIds) {
-        // 幂等处理：已读记录存在则跳过
-        int count = noticeReadMapper.selectIsRead(noticeId, userId);
-        if (count == 0) {
-            SysNoticeRead noticeRead = new SysNoticeRead();
-            noticeRead.setNoticeId(noticeId);
-            noticeRead.setUserId(userId);
-            noticeRead.setReadTime(new Date());
-            noticeReadMapper.insertNoticeRead(noticeRead);
-        }
+    if (noticeIds == null || noticeIds.length == 0) {
+        return;
     }
+    noticeReadMapper.insertNoticeReadBatch(userId, noticeIds);
 }
 ```
 
-**查询带已读状态的公告列表**:
+**查询带已读状态的公告列表** (第 47-50 行):
 
 ```java
 @Override
@@ -191,49 +182,32 @@ public List<SysNotice> selectNoticeListWithReadStatus(Long userId, int limit) {
 ```
 
 **要点**:
-- 批量操作使用 `@Transactional`
-- 幂等性设计：重复调用不报错
-- 复杂查询在 Mapper 层完成
+- 批量操作使用 Mapper 的 `insertNoticeReadBatch` 方法（XML 中批量插入）
+- 复杂查询在 Mapper 层通过 SQL 关联完成
 
 ---
 
-### 4. 账户锁定（SysLogininforServiceImpl）
+### 4. 登录日志（SysLogininforServiceImpl）
 
 **源码**: [`SysLogininforServiceImpl.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysLogininforServiceImpl.java)
 
-**记录登录失败并锁定账户**:
+该服务实现较简单，主要功能：
+- `insertLogininfor`: 新增登录日志
+- `selectLogininforList`: 查询登录日志列表
+- `deleteLogininforByIds`: 批量删除登录日志
+- `cleanLogininfor`: 清空登录日志
 
-```java
-@Override
-public void recordLoginInfo(String userName, boolean isIncrement) {
-    SysUser user = userMapper.selectUserByUserName(userName);
-    
-    if (isIncrement) {
-        // 增加登录失败次数
-        user.setLoginDate(new Date());
-        user.setRemark(user.getRemark() + " 登录失败" + (user.getLoginCount() + 1) + "次");
-        user.setLoginCount(user.getLoginCount() + 1);
-        userMapper.updateUser(user);
-        
-        // 达到阈值锁定账户
-        if (user.getLoginCount() >= 5) {
-            user.setStatus("1"); // 停用
-            userMapper.updateUser(user);
-        }
-    } else {
-        // 登录成功，重置失败次数
-        user.setLoginDate(new Date());
-        user.setLoginCount(0);
-        userMapper.updateUser(user);
-    }
-}
-```
+**注意**: 账户锁定逻辑不在该 Service 中，而是在登录认证过滤器中处理。
 
 ---
 
 ## 使用示例
 
 ### Controller 中注入 Service
+
+以岗位管理为例：
+
+**源码参考**: `ruoyi-system/src/main/java/com/ruoyi/system/controller/SysPostController.java`
 
 ```java
 @RestController
@@ -245,6 +219,7 @@ public class SysPostController {
     
     @GetMapping("/list")
     public TableDataInfo list(SysPost post) {
+        // Service 层处理查询逻辑
         List<SysPost> list = postService.selectPostList(post);
         return getDataTable(list);
     }
@@ -266,19 +241,11 @@ public class SysPostController {
 
 ### 1. 接口与实现分离
 
-```java
-// 接口定义
-public interface ISysPostService {
-    List<SysPost> selectPostList(SysPost post);
-    // ...
-}
+接口定义业务方法，实现类处理具体逻辑。
 
-// 实现类
-@Service
-public class SysPostServiceImpl implements ISysPostService {
-    // ...
-}
-```
+**源码参考**:
+- 接口：`ruoyi-system/src/main/java/com/ruoyi/system/service/ISysPostService.java`
+- 实现：`ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysPostServiceImpl.java`
 
 ### 2. 异常处理
 

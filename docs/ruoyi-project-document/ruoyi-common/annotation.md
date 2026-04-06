@@ -36,6 +36,8 @@ public AjaxResult login(@RequestBody LoginBody loginBody) {
 | deptField | String | "dept_id" | 部门字段名 |
 | permission | String | "" | 权限字符 |
 
+> 源码：`ruoyi-common/annotation/src/main/java/com/ruoyi/common/annotation/DataScope.java`
+
 **使用场景**: 需要根据部门权限过滤数据的查询方法
 
 **示例**:
@@ -62,6 +64,8 @@ AND (u.user_id = #{currentUser.userId} OR d.dept_id IN (...) )
 | 属性 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | value | DataSourceType | MASTER | 数据源类型 |
+
+> 源码：`ruoyi-common/annotation/src/main/java/com/ruoyi/common/annotation/DataSource.java`
 
 **数据源类型**:
 - `DataSourceType.MASTER` - 主库
@@ -101,22 +105,15 @@ public class UserServiceImpl implements UserService {
 | isSaveResponseData | boolean | true | 是否保存响应参数 |
 | excludeParamNames | String[] | {} | 排除的参数名 |
 
-**BusinessType 枚举**:
-- `OTHER` - 其他
-- `INSERT` - 新增
-- `UPDATE` - 修改
-- `DELETE` - 删除
-- `GRANT` - 授权
-- `EXPORT` - 导出
-- `IMPORT` - 导入
-- `FORCE` - 强退
-- `GENCODE` - 生成代码
-- `CLEAN` - 清空
+> 源码：`ruoyi-common/annotation/src/main/java/com/ruoyi/common/annotation/Log.java`
 
-**OperatorType 枚举**:
-- `OTHER` - 其他
-- `MANAGE` - 后台用户
-- `MOBILE` - 手机端用户
+**BusinessType 枚举**: 详见 `ruoyi-common/enums/src/main/java/com/ruoyi/common/enums/BusinessType.java`
+- `OTHER` - 其他 | `INSERT` - 新增 | `UPDATE` - 修改 | `DELETE` - 删除
+- `GRANT` - 授权 | `EXPORT` - 导出 | `IMPORT` - 导入 | `FORCE` - 强退
+- `GENCODE` - 生成代码 | `CLEAN` - 清空
+
+**OperatorType 枚举**: 详见 `ruoyi-common/enums/src/main/java/com/ruoyi/common/enums/OperatorType.java`
+- `OTHER` - 其他 | `MANAGE` - 后台用户 | `MOBILE` - 手机端用户
 
 **示例**:
 ```java
@@ -142,9 +139,10 @@ public AjaxResult add(@RequestBody SysUser user) {
 | count | int | 100 | 限流次数 |
 | limitType | LimitType | DEFAULT | 限流类型 |
 
-**LimitType 枚举**:
-- `DEFAULT` - 全局限流
-- `IP` - 按 IP 限流
+> 源码：`ruoyi-common/annotation/src/main/java/com/ruoyi/common/annotation/RateLimiter.java`
+
+**LimitType 枚举**: 详见 `ruoyi-common/enums/src/main/java/com/ruoyi/common/enums/LimitType.java`
+- `DEFAULT` - 全局限流 | `IP` - 按 IP 限流
 
 **示例**:
 ```java
@@ -167,6 +165,8 @@ public AjaxResult sendSms(@RequestParam String phone) {
 |------|------|--------|------|
 | interval | int | 5000 | 间隔时间 (ms) |
 | message | String | "不允许重复提交" | 提示信息 |
+
+> 源码：`ruoyi-common/annotation/src/main/java/com/ruoyi/common/annotation/RepeatSubmit.java`
 
 **原理**: 使用 Redis 缓存请求标识，在指定时间间隔内相同请求会被拦截
 
@@ -192,6 +192,8 @@ public AjaxResult add(@RequestBody Order order) {
 |------|------|--------|
 | desensitizedType | DesensitizedType | 脱敏类型 |
 
+> 源码：`ruoyi-common/annotation/src/main/java/com/ruoyi/common/annotation/Sensitive.java`
+
 **DesensitizedType 枚举**:
 | 类型 | 说明 | 脱敏效果 |
 |------|------|----------|
@@ -202,6 +204,9 @@ public AjaxResult add(@RequestBody Order order) {
 | `EMAIL` | 邮箱 | z****@example.com |
 | `BANK_CARD` | 银行卡号 | **** **** **** **** 1234 |
 | `CAR_LICENSE` | 车牌 | 京 A****8 |
+| `ADDRESS` | 地址 | 北京市朝阳区*** |
+
+> 脱敏实现见源码：`ruoyi-common/enums/src/main/java/com/ruoyi/common/enums/DesensitizedType.java`
 
 **示例**:
 ```java
@@ -220,51 +225,31 @@ public class UserVO {
 
 **作用**: 控制 Excel 导入导出行为
 
-**@Excel 属性**:
-| 属性 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| name | String | "" | 列名 |
-| sort | int | MAX_VALUE | 排序 |
-| dateFormat | String | "" | 日期格式 |
-| dictType | String | "" | 字典类型 |
-| readConverterExp | String | "" | 读取转换表达式 |
-| separator | String | "," | 分隔符 |
-| scale | int | -1 | BigDecimal 精度 |
-| roundingMode | int | ROUND_HALF_EVEN | 舍入规则 |
-| height | double | 14 | 列高度 |
-| width | double | 16 | 列宽度 |
-| suffix | String | "" | 文字后缀 |
-| defaultValue | String | "" | 默认值 |
-| prompt | String | "" | 提示信息 |
-| wrapText | boolean | false | 是否换行 |
-| combo | String[] | {} | 下拉选择内容 |
-| comboReadDict | boolean | false | 是否从字典读取 |
-| needMerge | boolean | false | 是否合并单元格 |
-| isExport | boolean | true | 是否导出 |
-| targetAttr | String | "" | 目标属性 |
-| isStatistics | boolean | false | 是否统计 |
-| cellType | ColumnType | STRING | 单元格类型 |
-| headerBackgroundColor | IndexedColors | GREY_50_PERCENT | 表头背景色 |
-| headerColor | IndexedColors | WHITE | 表头字体颜色 |
-| backgroundColor | IndexedColors | WHITE | 单元格背景色 |
-| color | IndexedColors | BLACK | 单元格字体颜色 |
-| align | HorizontalAlignment | CENTER | 对齐方式 |
-| handler | Class | ExcelHandlerAdapter | 自定义处理器 |
-| args | String[] | {} | 处理器参数 |
-| type | Type | ALL | 字段类型 |
+**@Excel 属性** (完整属性见源码 `ruoyi-common/annotation/src/main/java/com/ruoyi/common/annotation/Excel.java`):
+| 属性 | 说明 | 默认值 |
+|------|------|--------|
+| name | 列名 | "" |
+| sort | 排序 | MAX_VALUE |
+| dateFormat | 日期格式 | "" |
+| dictType | 字典类型 | "" |
+| readConverterExp | 读取转换表达式 | "" |
+| cellType | 单元格类型 (NUMERIC/STRING/IMAGE/TEXT) | STRING |
+| type | 导出导入类型 (ALL/EXPORT/IMPORT) | ALL |
+| width/height | 列宽/高度 | 16/14 |
+| align | 对齐方式 | CENTER |
+| isExport | 是否导出 | true |
 
-**Type 枚举**:
-- `ALL(0)` - 导出导入
-- `EXPORT(1)` - 仅导出
-- `IMPORT(2)` - 仅导入
+其他属性包括：scale、roundingMode、suffix、defaultValue、prompt、wrapText、combo、needMerge、targetAttr、isStatistics、handler、args 等
+
+**Type 枚举**: 详见 `ruoyi-common/annotation/src/main/java/com/ruoyi/common/annotation/Excel.java`
+- `ALL(0)` - 导出导入 | `EXPORT(1)` - 仅导出 | `IMPORT(2)` - 仅导入
 
 **ColumnType 枚举**:
-- `NUMERIC(0)` - 数字
-- `STRING(1)` - 字符串
-- `IMAGE(2)` - 图片
-- `TEXT(3)` - 文本
+- `NUMERIC(0)` - 数字 | `STRING(1)` - 字符串 | `IMAGE(2)` - 图片 | `TEXT(3)` - 文本
 
 **@Excels**: 多个@Excel 注解的集合
+
+> 源码：`ruoyi-common/annotation/src/main/java/com/ruoyi/common/annotation/Excels.java`
 
 **示例**:
 ```java
