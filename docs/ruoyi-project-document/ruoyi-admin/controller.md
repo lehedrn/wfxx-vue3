@@ -45,10 +45,16 @@ controller/
 
 ### CommonController - 通用接口
 
+**源码**: [`CommonController.java`](../../ruoyi-admin/src/main/java/com/ruoyi/web/controller/common/CommonController.java)
+
+**路径**: `/common`
+
 | 接口 | 路径 | 方法 | 说明 |
 |------|------|------|------|
-| 健康检查 | `/health` | GET | 系统健康状态检查 |
-| 下载资源 | 通用 | GET | 文件下载 |
+| 文件下载 | `/download` | GET | 通用文件下载（支持下载后删除） |
+| 单文件上传 | `/upload` | POST | 上传单个文件 |
+| 多文件上传 | `/uploads` | POST | 上传多个文件 |
+| 下载资源文件 | `/download_resource` | GET | 下载资源文件（根据文件路径） |
 
 ---
 
@@ -336,13 +342,13 @@ POST /login
 
 **路径**: `/test/user`
 
-| 接口 | 路径 | 方法 | 说明 |
-|------|------|------|------|
-| 测试用户列表 | `GET /list` | GET | 查询测试用户列表（Swagger 示例） |
-| 测试用户详情 | `GET /{userId}` | GET | 获取测试用户详细信息 |
-| 新增测试用户 | `POST /save` | POST | 创建测试用户 |
-| 修改测试用户 | `PUT /update` | PUT | 更新测试用户信息 |
-| 删除测试用户 | `DELETE /{userId}` | DELETE | 删除测试用户 |
+| 接口 | 路径 | 方法 | 返回类型 | 说明 |
+|------|------|------|------|------|
+| 测试用户列表 | `GET /list` | GET | `R<List<UserEntity>>` | 查询测试用户列表（Swagger 示例） |
+| 测试用户详情 | `GET /{userId}` | GET | `R<UserEntity>` | 获取测试用户详细信息 |
+| 新增测试用户 | `POST /save` | POST | `R<String>` | 创建测试用户 |
+| 修改测试用户 | `PUT /update` | PUT | `R<String>` | 更新测试用户信息 |
+| 删除测试用户 | `DELETE /{userId}` | DELETE | `R<String>` | 删除测试用户 |
 
 ---
 
