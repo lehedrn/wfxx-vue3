@@ -42,7 +42,7 @@ public AjaxResult upload(@RequestParam("file") MultipartFile file) {
 |--------|----------|
 | `FileUtils` | `downloadFile(response, fileName, realName)`, `deleteFile(absolutePath)`, `copyFile/copyDirectory(source, target)`, `checkAllowDownload(fileName)`, `getName(fileName)` |
 | `FileTypeUtils` | `getFileType(file/fileName)`, `isImage(fileType)`, `isFlash(fileType)`, `isMedia(fileType)` |
-| `ImageUtils` | `checkIsImage(fileName/file)`, `getImage(imageUrl)` |
+| `ImageUtils` | `getImage(imageUrl)` |
 | `MimeTypeUtils` | 常量：`DEFAULT_ALLOWED_EXTENSION`, `IMAGE_EXTENSION`, `FLASH_EXTENSION`, `MEDIA_EXTENSION`, `VIDEO_EXTENSION` |
 
 ---
@@ -97,18 +97,42 @@ String result = HttpUtils.sendPost("https://api.example.com/api", jsonParam, "ap
 | 工具类 | 核心方法 |
 |--------|----------|
 | `AddressUtils` | `getRealAddressByIP(ip)` |
-| `IpUtils` | `internalIp(ip)`, `isValidIp(ip)`, `getIpAddr(request)` |
+| `IpUtils` | `getIpAddr()`, `getIpAddr(request)`, `internalIp(ip)`, `getHostIp()`, `getHostName()`, `isIP(ip)`, `isIpWildCard(ip)`, `isIPSegment(ipSeg)`, `isMatchedIp(filter, ip)`, `getMultistageReverseProxyIp(ip)` |
 
 **使用示例**:
 ```java
-// 根据 IP 获取地址
-String address = AddressUtils.getRealAddressByIP("8.8.8.8");
+// 获取客户端 IP
+String ip = IpUtils.getIpAddr(request);
 
 // 检查是否内网
 boolean isInternal = IpUtils.internalIp("192.168.1.1");  // true
 
-// 获取客户端 IP
-String ip = IpUtils.getIpAddr(request);
+// 获取本地 IP 和主机名
+String hostIp = IpUtils.getHostIp();
+String hostName = IpUtils.getHostName();
+
+// IP 通配符匹配
+boolean isMatched = IpUtils.isMatchedIp("192.168.1.*", "192.168.1.100");  // true
+```
+
+---
+
+## 16-1. UserAgentUtils - 用户代理工具类
+
+> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/http/UserAgentUtils.java`
+
+**方法**:
+
+| 方法 | 说明 |
+|------|------|
+| `getBrowser(userAgent)` | 获取浏览器信息 |
+| `getOperatingSystem(userAgent)` | 获取操作系统信息 |
+
+**使用示例**:
+```java
+String userAgent = request.getHeader("User-Agent");
+String browser = UserAgentUtils.getBrowser(userAgent);  // "Chrome 120.0"
+String os = UserAgentUtils.getOperatingSystem(userAgent);  // "Windows 11"
 ```
 
 ---
@@ -169,7 +193,7 @@ UserService userService = SpringUtils.getBean(UserService.class);
 
 | 工具类 | 核心方法 |
 |--------|----------|
-| `BeanUtils` | `copyProperties(source, target)`, `describe(bean)`, `populate(map, clazz)` |
+| `BeanUtils` | `copyBeanProp(dest, src)`, `getSetterMethods(obj)`, `getGetterMethods(obj)`, `isMethodPropEquals(m1, m2)` |
 | `BeanValidators` | `validateWithException(validator, target, groups)` |
 
 ---
@@ -233,7 +257,22 @@ PageHelper.orderBy(orderBy);
 
 > 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/DictUtils.java`
 
-**方法**: `getDictLabel(dictType, dictValue)`, `getDictValue(dictType, dictLabel)`, `setDictList(dictType, list)`, `getDictList(dictType)`
+**常量**: `SEPARATOR` (",")
+
+**方法**:
+
+| 方法 | 说明 |
+|------|------|
+| `setDictCache(key, dictDatas)` | 设置字典缓存 |
+| `getDictCache(key)` | 获取字典缓存 |
+| `getDictLabel(dictType, dictValue)` | 根据字典值和类型获取标签 |
+| `getDictLabel(dictType, dictValue, separator)` | 根据字典值和类型获取标签（指定分隔符） |
+| `getDictValue(dictType, dictLabel)` | 根据字典标签和类型获取值 |
+| `getDictValue(dictType, dictLabel, separator)` | 根据字典标签和类型获取值（指定分隔符） |
+| `getDictValues(dictType)` | 根据字典类型获取所有值 |
+| `getDictLabels(dictType)` | 根据字典类型获取所有标签 |
+| `removeDictCache(key)` | 删除指定字典缓存 |
+| `clearDictCache()` | 清空所有字典缓存 |
 
 ---
 

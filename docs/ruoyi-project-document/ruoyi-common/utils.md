@@ -84,73 +84,81 @@ StringUtils.padl(123, 5, '0')  // "00123"
 // 删除末尾分隔符
 StringUtils.lastStringDel("a,b,c,", ",")  // "a,b,c"
 ```
-boolean endsWith(CharSequence str, CharSequence suffix)
-boolean endsWithAny(CharSequence sequence, CharSequence... searchStrings)
-boolean endsWithIgnoreCase(CharSequence str, CharSequence suffix)
-```
+
+---
+
+## 2. ExceptionUtil - 异常工具类
+
+> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/ExceptionUtil.java`
+
+**方法**:
+
+| 方法 | 说明 |
+|------|------|
+| `getExceptionMessage(e)` | 获取 exception 的详细错误信息 |
+| `getRootErrorMessage(e)` | 获取根异常错误信息 |
 
 **使用示例**:
 ```java
-StringUtils.containsIgnoreCase("Hello World", "hello")  // true
-StringUtils.equalsAnyIgnoreCase("GET", "get", "post")   // true
-StringUtils.startsWithAny("http://abc.com", "http://", "https://")  // true
-```
-
-#### 路径匹配
-```java
-boolean isMatch(String pattern, String url)  // Ant 风格路径匹配
-boolean matches(String str, List<String> strs)
-```
-
-**使用示例**:
-```java
-// Ant 风格匹配
-StringUtils.isMatch("/api/*", "/api/users")     // true
-StringUtils.isMatch("/api/**", "/api/users/1")  // true
-StringUtils.isMatch("/api?", "/api1")           // true
-```
-
-#### 数字补齐
-```java
-String padl(Number num, int size)
-String padl(String s, int size, char c)
-```
-
-**使用示例**:
-```java
-StringUtils.padl(123, 5, '0')    // "00123"
-StringUtils.padl("abc", 5, '0')  // "00abc"
-```
-
-#### 删除最后一个字符串
-```java
-String lastStringDel(String str, String spit)   // 删除字符串末尾指定的分隔符
-```
-
-**使用示例**:
-```java
-StringUtils.lastStringDel("a,b,c,", ",")     // "a,b,c"
-StringUtils.lastStringDel("hello", ",")      // "hello" (无变化)
+try {
+    // 业务逻辑
+} catch (Exception e) {
+    String errorMessage = ExceptionUtil.getExceptionMessage(e);
+    String rootMessage = ExceptionUtil.getRootErrorMessage(e);
+}
 ```
 
 ---
 
-## 2. DateUtils - 日期工具类
+## 3. Arith - 精确计算工具类
+
+> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/arith/Arith.java`
+
+**核心方法**:
+
+| 方法 | 说明 |
+|------|------|
+| `add(v1, v2)` | 提供精确的加法 |
+| `sub(v1, v2)` | 提供精确的减法 |
+| `mul(v1, v2)` | 提供精确的乘法 |
+| `div(v1, v2)` | 提供精确的除法 |
+| `div(v1, v2, scale)` | 提供精确的除法（指定精度） |
+| `round(v, scale)` | 提供精确的四舍五入 |
+
+**使用示例**:
+```java
+BigDecimal result = Arith.add(0.1, 0.2);  // 0.3
+BigDecimal result = Arith.div(1.0, 3.0, 2);  // 0.33
+```
+
+---
+
+## 4. DateUtils - 日期工具类
 
 > 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/DateUtils.java`  
 > 继承：`org.apache.commons.lang3.time.DateUtils`
 
 **常用格式**: `YYYY`, `YYYY_MM`, `YYYY_MM_DD`, `YYYYMMDDHHMMSS`, `YYYY_MM_DD_HH_MM_SS`
 
-**核心方法**:
+**方法**:
 
-| 类型 | 方法 |
+| 方法 | 说明 |
 |------|------|
-| 获取当前 | `getNowDate()`, `getDate()`, `getTime()`, `dateTimeNow()`, `dateTimeNow(format)` |
-| 格式化 | `parseDateToStr(format, date)`, `dateTime(format, ts)`, `parseDate(str)` |
-| 日期路径 | `datePath()`, `dateTime()` |
-| 时间计算 | `getServerStartDate()`, `differentDaysByMillisecond(date1, date2)`, `timeDistance(endDate, startTime)` |
-| Java8 转换 | `toDate(LocalDateTime)`, `toDate(LocalDate)` |
+| `getNowDate()` | 获取当前 Date 型日期 |
+| `getDate()` | 获取当前日期 (yyyy-MM-dd) |
+| `getTime()` | 获取当前日期时间 (yyyy-MM-dd HH:mm:ss) |
+| `dateTimeNow()` | 获取当前时间戳 (yyyyMMddHHmmss) |
+| `dateTimeNow(format)` | 获取指定格式的时间戳 |
+| `dateTime(format, ts)` | 字符串转日期 |
+| `parseDateToStr(format, date)` | 日期转字符串 |
+| `datePath()` | 日期路径 (yyyy/MM/dd) |
+| `dateTime()` | 日期路径 (yyyyMMdd) |
+| `parseDate(str)` | 日期型字符串转化为日期 |
+| `getServerStartDate()` | 获取服务器启动时间 |
+| `differentDaysByMillisecond(date1, date2)` | 计算相差天数 |
+| `timeDistance(endDate, startTime)` | 计算时间差 |
+| `toDate(LocalDateTime)` | LocalDateTime 转 Date |
+| `toDate(LocalDate)` | LocalDate 转 Date |
 
 **使用示例**:
 ```java
@@ -168,7 +176,29 @@ Date date1 = DateUtils.toDate(ldt);
 
 ---
 
-## 3. SecurityUtils - 安全服务工具类
+## 5. PageUtils - 分页工具类
+
+> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/PageUtils.java`
+
+**方法**:
+
+| 方法 | 说明 |
+|------|------|
+| `startPage()` | 设置请求分页数据 |
+| `clearPage()` | 清理分页的线程变量 |
+
+**使用示例**:
+```java
+// 查询前设置分页
+PageUtils.startPage();
+List<SysUser> list = userMapper.selectUserList(user);
+// 清理分页
+PageUtils.clearPage();
+```
+
+---
+
+## 6. SecurityUtils - 安全服务工具类
 
 > 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/SecurityUtils.java`
 
@@ -198,19 +228,30 @@ if (SecurityUtils.hasRole("admin")) { }
 
 ---
 
-## 4. ServletUtils - Servlet 工具类
+## 6. SecurityUtils - 安全服务工具类
 
 > 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/ServletUtils.java`
 
 **核心方法**:
 
-| 类型 | 方法 |
+| 方法 | 说明 |
 |------|------|
-| 获取对象 | `getRequest()`, `getResponse()`, `getSession()`, `getRequestAttributes()` |
-| 参数获取 | `getParameter(name)`, `getParameter(name, default)`, `getParameterToInt(name)`, `getParameterToBool(name)`, `getParams(request)`, `getParamMap(request)` |
-| 响应处理 | `renderString(response, string)` |
-| 请求判断 | `isAjaxRequest(request)` |
-| URL 编解码 | `urlEncode(str)`, `urlDecode(str)` |
+| `getRequest()` | 获取 request 对象 |
+| `getResponse()` | 获取 response 对象 |
+| `getSession()` | 获取 HttpSession 对象 |
+| `getRequestAttributes()` | 获取 RequestAttributes |
+| `getParameter(name)` | 获取 String 参数 |
+| `getParameter(name, defaultValue)` | 获取 String 参数（带默认值） |
+| `getParameterToInt(name)` | 获取 Integer 参数 |
+| `getParameterToInt(name, defaultValue)` | 获取 Integer 参数（带默认值） |
+| `getParameterToBool(name)` | 获取 Boolean 参数 |
+| `getParameterToBool(name, defaultValue)` | 获取 Boolean 参数（带默认值） |
+| `getParams(request)` | 获得所有请求参数 (Map<String, String[]>) |
+| `getParamMap(request)` | 获得所有请求参数 (Map<String, String>) |
+| `renderString(response, string)` | 将字符串渲染到客户端 |
+| `isAjaxRequest(request)` | 判断是否是 Ajax 异步请求 |
+| `urlEncode(str)` | 内容编码 |
+| `urlDecode(str)` | 内容解码 |
 
 **使用示例**:
 ```java
@@ -259,6 +300,56 @@ ServletUtils.renderString(response, JSONObject.toJSONString(result));
 
 ### URL 编解码
 `urlEncode(str)`, `urlDecode(str)`
+
+---
+
+## 7. Threads - 线程工具类
+
+> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/Threads.java`
+
+**方法**:
+
+| 方法 | 说明 |
+|------|------|
+| `sleep(milliseconds)` | 休眠 |
+| `runAndShutdownAll(executor)` | 运行并关闭所有线程 |
+
+---
+
+## 8. LogUtils - 日志工具类
+
+> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/LogUtils.java`
+
+**方法**:
+
+| 方法 | 说明 |
+|------|------|
+| `getLog()` | 获取日志记录对象 |
+
+---
+
+## 9. MessageUtils - 消息工具类
+
+> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/MessageUtils.java`
+
+**方法**:
+
+| 方法 | 说明 |
+|------|------|
+| `message(code, args)` | 获取消息 |
+
+---
+
+## 10. DesensitizedUtil - 数据脱敏工具
+
+> 源码：`ruoyi-common/utils/src/main/java/com/ruoyi/common/utils/DesensitizedUtil.java`
+
+**方法**:
+
+| 方法 | 说明 |
+|------|------|
+| `password(pwd)` | 密码脱敏 |
+| `carLicense(license)` | 车牌脱敏 |
 
 ---
 
