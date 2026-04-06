@@ -2,7 +2,9 @@
 
 ## 概述
 
-`ruoyi-system/domain` 包提供了系统业务实体类，用于表示数据库表结构对应的 Java 对象。实体类继承自 `BaseEntity` 基础类，支持 MyBatis 自动映射。
+`ruoyi-system/domain` 包提供了系统业务实体类，用于表示数据库表结构对应的 Java 对象。所有实体类继承自 `BaseEntity`，使用 MyBatis XML 映射（非 JPA 注解）。
+
+**源码位置**: `ruoyi-system/src/main/java/com/ruoyi/system/domain/`
 
 ## 模块结构
 
@@ -27,36 +29,17 @@ domain/
 
 ## 基础实体类
 
-所有实体类继承自 `BaseEntity`（位于 `ruoyi-common` 模块）：
+所有业务实体继承自 `BaseEntity`（位于 `ruoyi-common` 模块），自动包含以下字段：
 
-```java
-public class BaseEntity implements Serializable {
-    /** ID */
-    private Long id;
-    
-    /** 创建者 */
-    private String createBy;
-    
-    /** 创建时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Date createTime;
-    
-    /** 更新者 */
-    private String updateBy;
-    
-    /** 更新时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Date updateTime;
-    
-    /** 备注 */
-    private String remark;
-    
-    /** 删除标志 */
-    private String delFlag;
-    
-    // Getters and Setters
-}
-```
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | Long | 主键 ID |
+| createBy | String | 创建者 |
+| createTime | Date | 创建时间 |
+| updateBy | String | 更新者 |
+| updateTime | Date | 更新时间 |
+| remark | String | 备注 |
+| delFlag | String | 删除标志 |
 
 ---
 
@@ -64,41 +47,20 @@ public class BaseEntity implements Serializable {
 
 ### 1. SysPost - 岗位实体
 
+**源码**: [`SysPost.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/domain/SysPost.java)
+
 **表名**: `sys_post`
 
-```java
-public class SysPost extends BaseEntity implements Serializable {
-    
-    /** 岗位 ID */
-    private Long postId;
-    
-    /** 岗位编码 */
-    private String postCode;
-    
-    /** 岗位名称 */
-    private String postName;
-    
-    /** 岗位排序 */
-    private Integer postSort;
-    
-    /** 状态（0 正常 1 停用） */
-    private String status;
-    
-    /** 备注 */
-    private String remark;
-}
-```
-
-**字段说明**:
+**核心字段**:
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| post_id | BIGINT | 岗位 ID（主键） |
-| post_code | VARCHAR | 岗位编码 |
-| post_name | VARCHAR | 岗位名称 |
-| post_sort | INT | 显示顺序 |
-| status | CHAR | 状态（0 正常 1 停用） |
-| create_time | DATETIME | 创建时间 |
+| postId | Long | 岗位 ID（主键） |
+| postCode | String | 岗位编码 |
+| postName | String | 岗位名称 |
+| postSort | Integer | 显示顺序 |
+| status | String | 状态（0 正常 1 停用） |
+| flag | boolean | 用户是否存在此岗位标识 |
 
 **使用示例**:
 
@@ -118,261 +80,93 @@ postMapper.insertPost(post);
 
 ### 2. SysConfig - 参数配置实体
 
+**源码**: [`SysConfig.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/domain/SysConfig.java)
+
 **表名**: `sys_config`
 
-```java
-public class SysConfig extends BaseEntity implements Serializable {
-    
-    /** 参数主键 */
-    private Long configId;
-    
-    /** 参数名称 */
-    private String configName;
-    
-    /** 参数键名 */
-    private String configKey;
-    
-    /** 参数键值 */
-    private String configValue;
-    
-    /** 系统内置（Y 是 N 否） */
-    private String configType;
-    
-    /** 备注 */
-    private String remark;
-}
-```
-
-**字段说明**:
+**核心字段**:
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| config_id | BIGINT | 参数主键（主键） |
-| config_name | VARCHAR | 参数名称 |
-| config_key | VARCHAR | 参数键名 |
-| config_value | VARCHAR | 参数键值 |
-| config_type | CHAR | 系统内置（Y 是 N 否） |
-| create_time | DATETIME | 创建时间 |
+| configId | Long | 参数主键 |
+| configName | String | 参数名称 |
+| configKey | String | 参数键名 |
+| configValue | String | 参数键值 |
+| configType | String | 系统内置（Y 是 N 否） |
 
 **内置配置示例**:
 
-| config_key | config_value | 说明 |
-|------------|-------------|------|
+| configKey | configValue | 说明 |
+|-----------|-------------|------|
 | sys.user.initPassword | 123456 | 用户初始密码 |
-| sys.account.closeUser | false | 账号是否关闭 |
-| sys.account.registerUser | true | 是否允许注册 |
-
-**使用示例**:
-
-```java
-// 查询参数配置
-SysConfig config = configMapper.selectConfigByKey("sys.user.initPassword");
-String initPassword = config.getConfigValue();
-
-// 更新参数
-config.setConfigValue("new_value");
-configMapper.updateConfig(config);
-```
+| sys.account.captchaEnabled | true | 验证码开关 |
+| sys.account.registerUser | false | 是否允许注册 |
 
 ---
 
 ### 3. SysNotice - 通知公告实体
 
+**源码**: [`SysNotice.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/domain/SysNotice.java)
+
 **表名**: `sys_notice`
 
-```java
-public class SysNotice extends BaseEntity implements Serializable {
-    
-    /** 公告 ID */
-    private Long noticeId;
-    
-    /** 公告标题 */
-    private String noticeTitle;
-    
-    /** 公告类型（1 通知 2 公告） */
-    private String noticeType;
-    
-    /** 公告内容 */
-    private String noticeContent;
-    
-    /** 公告状态（0 正常 1 关闭） */
-    private String status;
-    
-    /** 是否已读 */
-    @JsonProperty("isRead")
-    private boolean isRead;
-    
-    /** 备注 */
-    private String remark;
-}
-```
-
-**字段说明**:
+**核心字段**:
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| notice_id | BIGINT | 公告 ID（主键） |
-| notice_title | VARCHAR | 公告标题 |
-| notice_type | CHAR | 公告类型（1 通知 2 公告） |
-| notice_content | TEXT | 公告内容（HTML） |
-| status | CHAR | 状态（0 正常 1 关闭） |
-| create_time | DATETIME | 创建时间 |
+| noticeId | Long | 公告 ID（主键） |
+| noticeTitle | String | 公告标题 |
+| noticeType | String | 公告类型（1 通知 2 公告） |
+| noticeContent | String | 公告内容（HTML） |
+| status | String | 状态（0 正常 1 关闭） |
 | isRead | boolean | 是否已读（非数据库字段） |
 
-**使用示例**:
-
-```java
-// 创建公告
-SysNotice notice = new SysNotice();
-notice.setNoticeTitle("系统维护通知");
-notice.setNoticeType("1"); // 通知
-notice.setNoticeContent("<p>系统将于今晚 23:00 进行维护...</p>");
-notice.setStatus("0");
-
-noticeMapper.insertNotice(notice);
-
-// 设置已读状态（用于前端展示）
-notice.setIsRead(true);
-```
+**注意**: `isRead` 字段使用 `@JsonProperty("isRead")` 注解，用于前端展示，不映射到数据库。
 
 ---
 
 ### 4. SysNoticeRead - 公告已读记录实体
 
+**源码**: [`SysNoticeRead.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/domain/SysNoticeRead.java)
+
 **表名**: `sys_notice_read`
 
-```java
-/**
- * 公告已读记录表 sys_notice_read
- */
-public class SysNoticeRead {
-    
-    /** 主键 */
-    private Long readId;
-    
-    /** 公告 ID */
-    private Long noticeId;
-    
-    /** 用户 ID */
-    private Long userId;
-    
-    /** 阅读时间 */
-    private Date readTime;
-}
-```
-
-**字段说明**:
+**核心字段**:
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| read_id | BIGINT | 主键（主键） |
-| notice_id | BIGINT | 公告 ID |
-| user_id | BIGINT | 用户 ID |
-| read_time | DATETIME | 阅读时间 |
+| readId | Long | 主键 |
+| noticeId | Long | 公告 ID |
+| userId | Long | 用户 ID |
+| readTime | Date | 阅读时间 |
 
 **注意**: 
 - 该类不继承 BaseEntity
 - 没有 createBy、createTime 等字段
-- 没有 readStatus 字段，通过是否存在记录判断是否已读
-
-**使用示例**:
-
-```java
-// 标记公告为已读
-SysNoticeRead noticeRead = new SysNoticeRead();
-noticeRead.setNoticeId(1L);
-noticeRead.setUserId(1L);
-noticeRead.setReadTime(new Date());
-
-noticeReadMapper.insertNoticeRead(noticeRead);
-
-// 检查是否已读（通过查询记录是否存在）
-int count = noticeReadMapper.selectIsRead(1L, 1L);
-boolean isRead = count > 0;
-```
+- 通过记录是否存在判断是否已读
 
 ---
 
 ### 5. SysOperLog - 操作日志实体
 
+**源码**: [`SysOperLog.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/domain/SysOperLog.java)
+
 **表名**: `sys_oper_log`
 
-```java
-public class SysOperLog extends BaseEntity implements Serializable {
-    
-    /** 日志主键 */
-    private Long operId;
-    
-    /** 模块标题 */
-    private String title;
-    
-    /** 业务类型（0 其它 1 新增 2 修改 3 删除） */
-    private Integer businessType;
-    
-    /** 业务类型数组 */
-    private Integer[] businessTypes;
-    
-    /** 请求方法 */
-    private String method;
-    
-    /** 请求方式 */
-    private String requestMethod;
-    
-    /** 操作类别（0 其它 1 后台用户 2 手机端用户） */
-    private Integer operatorType;
-    
-    /** 操作人员 */
-    private String operName;
-    
-    /** 部门名称 */
-    private String deptName;
-    
-    /** 请求 URL */
-    private String operUrl;
-    
-    /** 主机地址 */
-    private String operIp;
-    
-    /** 操作地点 */
-    private String operLocation;
-    
-    /** 请求参数 */
-    private String operParam;
-    
-    /** 返回参数 */
-    private String jsonResult;
-    
-    /** 操作状态（0 正常 1 异常） */
-    private Integer status;
-    
-    /** 错误消息 */
-    private String errorMsg;
-    
-    /** 操作时间 */
-    private Date operTime;
-    
-    /** 消耗时间（毫秒） */
-    private Long costTime;
-}
-```
-
-**字段说明**:
+**核心字段**:
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| oper_id | BIGINT | 日志主键（主键） |
-| title | VARCHAR | 模块标题 |
-| business_type | INT | 业务类型 |
-| method | VARCHAR | 请求方法 |
-| request_method | VARCHAR | 请求方式 |
-| oper_name | VARCHAR | 操作人员 |
-| oper_url | VARCHAR | 请求 URL |
-| oper_ip | VARCHAR | 主机地址 |
-| oper_param | TEXT | 请求参数 |
-| json_result | TEXT | 返回参数 |
-| status | INT | 操作状态 |
-| oper_time | DATETIME | 操作时间 |
-| cost_time | LONG | 消耗时间（毫秒） |
+| operId | Long | 日志主键 |
+| title | String | 模块标题 |
+| businessType | Integer | 业务类型（0 其它 1 新增 2 修改 3 删除） |
+| operName | String | 操作人员 |
+| operUrl | String | 请求 URL |
+| operIp | String | 主机地址 |
+| operParam | String | 请求参数 |
+| jsonResult | String | 返回参数 |
+| status | Integer | 操作状态（0 正常 1 异常） |
+| costTime | Long | 消耗时间（毫秒） |
 
 **使用示例**:
 
@@ -381,10 +175,8 @@ public class SysOperLog extends BaseEntity implements Serializable {
 SysOperLog operLog = new SysOperLog();
 operLog.setTitle("用户管理");
 operLog.setBusinessType(BusinessType.INSERT.ordinal());
-operLog.setRequestMethod("POST");
 operLog.setOperName("admin");
 operLog.setOperUrl("/system/user");
-operLog.setOperIp("127.0.0.1");
 operLog.setStatus(0);
 
 operLogMapper.insertOperlog(operLog);
@@ -394,236 +186,72 @@ operLogMapper.insertOperlog(operLog);
 
 ### 6. SysLogininfor - 登录日志实体
 
+**源码**: [`SysLogininfor.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/domain/SysLogininfor.java)
+
 **表名**: `sys_logininfor`
 
-```java
-public class SysLogininfor extends BaseEntity implements Serializable {
-    
-    /** 访问 ID */
-    private Long infoId;
-    
-    /** 用户账号 */
-    private String userName;
-    
-    /** 登录状态（0 成功 1 失败） */
-    private String status;
-    
-    /** 登录 IP 地址 */
-    private String ipaddr;
-    
-    /** 登录地点 */
-    private String loginLocation;
-    
-    /** 浏览器类型 */
-    private String browser;
-    
-    /** 操作系统 */
-    private String os;
-    
-    /** 提示消息 */
-    private String msg;
-    
-    /** 访问时间 */
-    private Date loginTime;
-}
-```
-
-**字段说明**:
+**核心字段**:
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| info_id | BIGINT | 访问 ID（主键） |
-| user_name | VARCHAR | 用户账号 |
-| status | CHAR | 登录状态 |
-| ipaddr | VARCHAR | 登录 IP 地址 |
-| login_location | VARCHAR | 登录地点 |
-| browser | VARCHAR | 浏览器类型 |
-| os | VARCHAR | 操作系统 |
-| login_time | DATETIME | 访问时间 |
-
-**使用示例**:
-
-```java
-// 记录登录成功
-SysLogininfor logininfor = new SysLogininfor();
-logininfor.setUserName("admin");
-logininfor.setStatus(Constants.SUCCESS);
-logininfor.setIpaddr("127.0.0.1");
-logininfor.setLoginLocation("内网 IP");
-logininfor.setBrowser("Chrome");
-logininfor.setOs("Windows 10");
-logininfor.setMsg("登录成功");
-
-logininforMapper.insertLogininfor(logininfor);
-```
+| infoId | Long | 访问 ID |
+| userName | String | 用户账号 |
+| status | String | 登录状态（0 成功 1 失败） |
+| ipaddr | String | 登录 IP 地址 |
+| loginLocation | String | 登录地点 |
+| browser | String | 浏览器类型 |
+| os | String | 操作系统 |
+| loginTime | Date | 访问时间 |
 
 ---
 
 ### 7. SysUserOnline - 在线用户会话实体
 
+**源码**: [`SysUserOnline.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/domain/SysUserOnline.java)
+
 **说明**: 该实体不对应数据库表，用于表示当前在线用户的会话信息。
 
-```java
-public class SysUserOnline implements Serializable {
-    
-    /** 会话编号 */
-    private String tokenId;
-    
-    /** 部门名称 */
-    private String deptName;
-    
-    /** 用户名称 */
-    private String userName;
-    
-    /** 登录 IP 地址 */
-    private String ipaddr;
-    
-    /** 登录地址 */
-    private String loginLocation;
-    
-    /** 浏览器类型 */
-    private String browser;
-    
-    /** 操作系统 */
-    private String os;
-    
-    /** 登录时间 */
-    private Long loginTime;
-}
-```
+**核心字段**:
 
-**使用示例**:
-
-```java
-// 从 LoginUser 转换为 SysUserOnline
-public static SysUserOnline toOnline(LoginUser loginUser) {
-    SysUser user = loginUser.getUser();
-    SysUserOnline online = new SysUserOnline();
-    online.setTokenId(loginUser.getToken());
-    online.setDeptName(user.getDept().getDeptName());
-    online.setUserName(user.getUserName());
-    online.setIpaddr(loginUser.getIpaddr());
-    online.setLoginLocation(loginUser.getLoginLocation());
-    online.setBrowser(loginUser.getBrowser());
-    online.setOs(loginUser.getOs());
-    online.setLoginTime(loginUser.getLoginTime());
-    return online;
-}
-```
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| tokenId | String | 会话编号 |
+| deptName | String | 部门名称 |
+| userName | String | 用户名称 |
+| ipaddr | String | 登录 IP 地址 |
+| loginLocation | String | 登录地址 |
+| browser | String | 浏览器类型 |
+| os | String | 操作系统 |
+| loginTime | Long | 登录时间 |
 
 ---
 
 ### 8. SysCache - 缓存信息实体
 
+**源码**: [`SysCache.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/domain/SysCache.java)
+
 **说明**: 该实体不对应数据库表，用于表示缓存信息。
 
-```java
-public class SysCache implements Serializable {
-    
-    /** 缓存名称 */
-    private String cacheName;
-    
-    /** 缓存键名 */
-    private String cacheKey;
-    
-    /** 缓存内容 */
-    private String cacheValue;
-    
-    /** 备注 */
-    private String remark;
-    
-    public SysCache() {}
-    
-    public SysCache(String cacheName, String cacheKey, String cacheValue) {
-        this.cacheName = cacheName;
-        this.cacheKey = cacheKey;
-        this.cacheValue = cacheValue;
-    }
-}
-```
+**核心字段**:
 
-**使用示例**:
-
-```java
-// 获取缓存信息
-Cache cache = SpringUtils.getBean(CacheManager.class).getCache("userCache");
-Object value = cache.get("user:1001");
-
-// 转换为 SysCache 对象
-SysCache sysCache = new SysCache(
-    "userCache", 
-    "user:1001", 
-    value.toString()
-);
-```
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| cacheName | String | 缓存名称 |
+| cacheKey | String | 缓存键名 |
+| cacheValue | String | 缓存内容 |
 
 ---
 
-## 关联实体类
+### 9-12. 关联实体类
 
-### 9. SysRoleDept - 角色部门关联实体
+以下关联实体类用于多对多关系映射，仅包含两个 ID 字段：
 
-**表名**: `sys_role_dept`
-
-```java
-@TableName("sys_role_dept")
-public class SysRoleDept implements Serializable {
-    
-    /** 角色 ID */
-    private Long roleId;
-    
-    /** 部门 ID */
-    private Long deptId;
-}
-```
-
-### 10. SysRoleMenu - 角色菜单关联实体
-
-**表名**: `sys_role_menu`
-
-```java
-@TableName("sys_role_menu")
-public class SysRoleMenu implements Serializable {
-    
-    /** 角色 ID */
-    private Long roleId;
-    
-    /** 菜单 ID */
-    private Long menuId;
-}
-```
-
-### 11. SysUserRole - 用户角色关联实体
-
-**表名**: `sys_user_role`
-
-```java
-@TableName("sys_user_role")
-public class SysUserRole implements Serializable {
-    
-    /** 用户 ID */
-    private Long userId;
-    
-    /** 角色 ID */
-    private Long roleId;
-}
-```
-
-### 12. SysUserPost - 用户岗位关联实体
-
-**表名**: `sys_user_post`
-
-```java
-@TableName("sys_user_post")
-public class SysUserPost implements Serializable {
-    
-    /** 用户 ID */
-    private Long userId;
-    
-    /** 岗位 ID */
-    private Long postId;
-}
-```
+| 实体类 | 表名 | 字段 | 说明 |
+|--------|------|------|------|
+| SysRoleDept | sys_role_dept | roleId, deptId | 角色部门关联 |
+| SysRoleMenu | sys_role_menu | roleId, menuId | 角色菜单关联 |
+| SysUserRole | sys_user_role | userId, roleId | 用户角色关联 |
+| SysUserPost | sys_user_post | userId, postId | 用户岗位关联 |
 
 ---
 
@@ -631,119 +259,68 @@ public class SysUserPost implements Serializable {
 
 ### RouterVo - 前端路由配置
 
-```java
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class RouterVo implements Serializable {
-    
-    /** 路由名字 */
-    private String name;
-    
-    /** 路由地址 */
-    private String path;
-    
-    /** 是否隐藏路由 */
-    private boolean hidden;
-    
-    /** 重定向地址 */
-    private String redirect;
-    
-    /** 组件地址 */
-    private String component;
-    
-    /** 路由参数 */
-    private String query;
-    
-    /** 是否总是显示父路由 */
-    private Boolean alwaysShow;
-    
-    /** 路由显示元数据 */
-    private MetaVo meta;
-    
-    /** 子路由 */
-    private List<RouterVo> children;
-    
-    // Getters and Setters
-}
-```
+**源码**: [`RouterVo.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/domain/vo/RouterVo.java)
+
+**核心字段**:
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| name | String | 路由名字 |
+| path | String | 路由地址 |
+| hidden | boolean | 是否隐藏路由 |
+| redirect | String | 重定向地址 |
+| component | String | 组件地址 |
+| alwaysShow | Boolean | 是否总是显示父路由 |
+| meta | MetaVo | 路由显示元数据 |
+| children | List<RouterVo> | 子路由 |
 
 ### MetaVo - 路由显示元数据
 
-```java
-public class MetaVo implements Serializable {
-    
-    /** 路由标题（显示在侧边栏和面包屑） */
-    private String title;
-    
-    /** 路由图标 */
-    private String icon;
-    
-    /** 是否被缓存 */
-    private boolean noCache;
-    
-    /** 内链地址（http(s)://开头） */
-    private String link;
-    
-    // Constructors and Getters and Setters
-}
-```
+**源码**: [`MetaVo.java`](../../ruoyi-system/src/main/java/com/ruoyi/system/domain/vo/MetaVo.java)
 
-**使用示例**:
+**核心字段**:
 
-```java
-// 创建路由配置
-RouterVo router = new RouterVo();
-router.setName("User");
-router.setPath("/system/user");
-router.setHidden(false);
-router.setComponent("system/user/index");
-
-// 创建元数据
-MetaVo meta = new MetaVo("用户管理", "user", false);
-router.setMeta(meta);
-
-// 创建子路由
-List<RouterVo> children = new ArrayList<>();
-RouterVo child = new RouterVo();
-child.setPath("list");
-child.setComponent("system/user/list");
-child.setMeta(new MetaVo("用户列表", "list"));
-children.add(child);
-router.setChildren(children);
-```
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| title | String | 路由标题（显示在侧边栏和面包屑） |
+| icon | String | 路由图标 |
+| noCache | boolean | 是否被缓存 |
+| link | String | 内链地址（http(s)://开头） |
 
 ---
 
 ## 实体类使用规范
 
-### 1. 新增操作
+### 1. 继承关系
+
+所有业务实体类都继承自 `BaseEntity`，自动拥有创建者、创建时间、更新者、更新时间、备注、删除标志等字段。
+
+```java
+// 正确：继承 BaseEntity
+public class SysPost extends BaseEntity implements Serializable {
+    // 业务字段...
+}
+```
+
+### 2. 新增操作
 
 ```java
 SysPost post = new SysPost();
 post.setPostCode("DEV");
 post.setPostName("开发岗位");
-post.setPostSort(1);
-post.setStatus("0");
-
-// 由 BaseEntity 自动设置创建者和创建时间
-post.setCreateBy(SecurityUtils.getUsername());
-post.setCreateTime(new Date());
-
+// BaseEntity 字段由框架自动设置
 postMapper.insertPost(post);
 ```
 
-### 2. 修改操作
+### 3. 修改操作
 
 ```java
 SysPost post = postMapper.selectPostById(postId);
 post.setPostName("高级开发岗位");
-post.setPostSort(2);
-post.setUpdateBy(SecurityUtils.getUsername());
-post.setUpdateTime(new Date());
-
 postMapper.updatePost(post);
 ```
 
-### 3. 删除操作
+### 4. 删除操作
 
 ```java
 // 逻辑删除（推荐）
@@ -754,20 +331,8 @@ postMapper.updatePost(post);
 postMapper.deletePostById(postId);
 ```
 
-### 4. 查询操作
-
-```java
-// 根据 ID 查询
-SysPost post = postMapper.selectPostById(postId);
-
-// 条件查询
-SysPost condition = new SysPost();
-condition.setPostCode("DEV");
-List<SysPost> list = postMapper.selectPostList(condition);
-```
-
 ---
 
-**文档版本**: 1.0  
+**文档版本**: 1.1  
 **最后更新**: 2026-04-07  
 **基于版本**: RuoYi v3.9.2
