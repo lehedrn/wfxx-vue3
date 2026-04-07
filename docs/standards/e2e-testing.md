@@ -500,7 +500,12 @@ await goodsTypeSelect.click()
 await page.press('body', 'ArrowDown')
 await page.press('body', 'Enter')
 ```
-```
+
+**注意事项**：
+- 主子表提交前必须填写所有必填子表字段
+- 客户管理中商品名称、商品价格、商品种类都是必填的
+- 子表选择器使用 `.el-table .el-select` 定位
+- 提交后使用搜索功能验证数据，避免分页问题
 
 ---
 
@@ -846,7 +851,7 @@ test.describe('产品管理 - 树形列表', () => {
 
 ---
 
-### 4.5 客户管理测试（主子表）
+### 5.5 客户管理测试（主子表）
 
 **文件**: `tests/demo/customer.spec.js`
 
@@ -863,61 +868,82 @@ test.describe('客户管理 - 主子表', () => {
     // 点击新增
     await authenticatedPage.click('button:has-text("新增")')
     await authenticatedPage.waitForSelector('.el-dialog__title')
+    await authenticatedPage.waitForTimeout(300)
     
-    // 填写客户基本信息
+    const dialog = authenticatedPage.locator('.el-dialog')
     const customerName = `测试客户_${Date.now()}`
-    await authenticatedPage.fill('input[placeholder="请输入客户姓名"]', customerName)
-    await authenticatedPage.fill('input[placeholder="请输入手机号"]', '13800138000')
     
-    // 添加商品子表
-    await authenticatedPage.click('button:has-text("添加商品")')
+    // 填写客户基本信息（触发 input 事件）
+    const nameInput = dialog.locator('input[placeholder="请输入客户姓名"]')
+    await nameInput.fill(customerName)
+    await nameInput.dispatchEvent('input')
     
-    // 填写第一行商品
-    await authenticatedPage.fill('input[placeholder="商品名称"]', '测试商品 A')
-    await authenticatedPage.fill('input[type="number"]', '99')
+    const phoneInput = dialog.locator('input[placeholder="请输入手机号码"]')
+    await phoneInput.fill('13800138000')
+    await phoneInput.dispatchEvent('input')
     
-    // 提交
-    await authenticatedPage.click('button:has-text("确定")')
+    // 添加商品子表行（必填）
+    await dialog.locator('button:has-text("添加")').click()
+    await authenticatedPage.waitForTimeout(300)
+    
+    // 填写商品信息
+    const goodsNameInput = dialog.locator('input[placeholder="请输入商品名称"]').first()
+    await goodsNameInput.fill('测试商品')
+    await goodsNameInput.dispatchEvent('input')
+    
+    const goodsPriceInput = dialog.locator('input[placeholder="请输入商品价格"]').first()
+    await goodsPriceInput.fill('100')
+    await goodsPriceInput.dispatchEvent('input')
+    
+    // 选择商品种类（键盘操作）
+    const goodsTypeSelect = dialog.locator('.el-table .el-select').first()
+    await goodsTypeSelect.click()
+    await authenticatedPage.waitForTimeout(300)
+    await authenticatedPage.press('body', 'ArrowDown')
+    await authenticatedPage.press('body', 'Enter')
+    
+    // 确保值已同步
+    await dialog.locator('.el-dialog__title').click()
+    await authenticatedPage.waitForTimeout(300)
+    
+    // 提交（注意按钮文本有空格）
+    await dialog.locator('button:has-text("确 定")').click()
     
     // 验证成功
     await expect(authenticatedPage.locator('.el-message--success')).toBeVisible()
     
-    // 验证列表中包含新客户
-    await expect(authenticatedPage.locator('tbody')).toContainText(customerName)
+    // 使用搜索验证（避免分页问题）
+    const searchForm = authenticatedPage.locator('.el-form--inline')
+    const searchInput = searchForm.locator('input[placeholder="请输入客户姓名"]').first()
+    await searchInput.fill(customerName)
+    await authenticatedPage.click('button:has-text("搜索")')
+    await authenticatedPage.waitForTimeout(500)
+    
+    // 验证表格（使用.first() 避免子表干扰）
+    const tableBody = authenticatedPage.locator('.el-table__body tbody').first()
+    await expect(tableBody).toContainText(customerName)
   })
 
-  test('修改客户（更新商品列表）', async ({ authenticatedPage }) => {
-    // 点击修改
-    await authenticatedPage.click('button:has-text("修改")')
+  test('修改客户', async ({ authenticatedPage }) => {
+    // 直接点击行内修改按钮（无需先勾选行）
+    const editButton = authenticatedPage.locator('tbody tr button:has-text("修改")').first()
+    await editButton.click()
     await authenticatedPage.waitForSelector('.el-dialog__title')
     
-    // 修改客户信息
-    // ...
-    
-    // 添加/修改商品
-    // ...
+    // 修改数据...
     
     // 提交
-    await authenticatedPage.click('button:has-text("确定")')
-    
-    // 验证成功
+    await dialog.locator('button:has-text("确 定")').click()
     await expect(authenticatedPage.locator('.el-message--success')).toBeVisible()
-  })
-
-  test('查看客户详情（主子表数据）', async ({ authenticatedPage }) => {
-    // 点击详情或修改按钮
-    await authenticatedPage.click('button:has-text("修改")')
-    await authenticatedPage.waitForSelector('.el-dialog__title')
-    
-    // 验证客户基本信息
-    // ...
-    
-    // 验证商品列表
-    const goodsRows = authenticatedPage.locator('.goods-table tbody tr')
-    expect(await goodsRows.count()).toBeGreaterThan(0)
   })
 })
 ```
+
+**关键点**：
+- 主子表提交前必须填写所有必填子表字段
+- 商品名称、商品价格、商品种类都是必填的
+- 使用 `.first()` 定位主表，避免子表 tbody 干扰
+- 使用搜索功能验证数据，避免分页问题
 
 ---
 
@@ -1073,6 +1099,72 @@ await expect(page.locator('.result')).toBeVisible()
 
 ---
 
+## 8. 常见问题与解决方案
+
+### 8.1 Element Plus 组件交互问题
+
+| 问题 | 原因 | 解决方案 |
+|------|------|----------|
+| `selectOption` 报错 | el-select 不是原生 `<select>` | 使用键盘操作：`click` → `ArrowDown` → `Enter` |
+| 表单提交后值为空 | Vue 响应式未同步 | 调用 `dispatchEvent('input')` 触发响应式 |
+| 按钮点击无响应 | 按钮文本包含空格 | 使用 `button:has-text("确 定")` 而非 `"确定"` |
+| 日期选择器无法选择 | 弹出层在 body 下 | 使用 `td:has-text("15"):visible` 并添加 `force: true` |
+| 单选/复选框不生效 | 需要点击 label 而非 input | 使用 `label.el-radio:has-text("选项")` |
+
+### 8.2 定位器问题
+
+| 问题 | 原因 | 解决方案 |
+|------|------|----------|
+| Strict mode violation | 选择器匹配多个元素 | 使用 `.first()` 或更精确的选择器 |
+| 元素未找到 | 页面未加载完成 | 添加 `waitForSelector` 或 `waitForTimeout` |
+| 元素不可用 (disabled) | 需要先选择表格行 | 直接使用行内按钮 `tbody tr button:has-text("修改")` |
+| 多个 tbody 冲突 | 主子表都有 tbody | 使用 `.el-table__body tbody.first()` 定位主表 |
+| 搜索框定位冲突 | 页面有多个相同 placeholder | 使用 `.el-form--inline` 限定搜索表单 |
+
+### 8.3 主子表问题
+
+| 问题 | 原因 | 解决方案 |
+|------|------|----------|
+| 提交对话框不关闭 | 子表必填字段未填写 | 添加商品行并填写名称、价格、种类 |
+| 表格验证失败 | 选择了错误的 tbody | 使用 `.first()` 或 `.el-form--inline` 限定 |
+| 子表选择器无法定位 | 选择器在表格内 | 使用 `.el-table .el-select` 定位 |
+
+### 8.4 验证问题
+
+| 问题 | 原因 | 解决方案 |
+|------|------|----------|
+| 找不到新创建的数据 | 数据在第 2 页 | 使用搜索功能定位特定数据 |
+| 成功消息未显示 | 提交逻辑问题或验证失败 | 检查控制台错误和对话框状态 |
+| 对话框未关闭 | 提交失败或验证错误 | 检查 `.el-message--error` 并截图调试 |
+
+### 8.5 调试技巧
+
+```javascript
+// 1. 打印元素数量
+const count = await page.locator('.el-select').count()
+console.log('el-select 数量:', count)
+
+// 2. 截图调试
+await page.screenshot({ path: 'debug/before-submit.png' })
+
+// 3. 保存页面 HTML
+const html = await page.content()
+fs.writeFileSync('debug/page.html', html)
+
+// 4. 检查对话框状态
+const dialogVisible = await dialog.count()
+console.log('对话框是否还在:', dialogVisible)
+
+// 5. 检查错误消息
+const errorMessage = page.locator('.el-message--error')
+if (await errorMessage.count() > 0) {
+  const errorText = await errorMessage.first().textContent()
+  console.log('提交失败:', errorText)
+}
+```
+
+---
+
 ## 9. 示例分类
 
 | 示例类型 | 对应模块 | 测试文件 | 说明 |
@@ -1095,46 +1187,81 @@ await expect(page.locator('.result')).toBeVisible()
 
 ### 若依系统常用元素定位
 
-| 元素类型 | 定位器 | 示例 |
-|----------|--------|------|
-| **菜单导航** | | |
-| 侧边栏菜单项 | `.el-menu-item:has-text()` | `click('text=学生管理')` |
-| 菜单展开 | `.el-submenu:has-text()` | `click('text=Demo 模块')` |
-| 直接导航 | `goto('/path')` | `goto('/demo/student')` |
-| **按钮** | | |
-| 新增按钮 | `button:has-text("新增")` | `click()` |
-| 修改按钮 | `button:has-text("修改")` | `click()` |
-| 删除按钮 | `button:has-text("删除")` | `click()` |
-| 搜索按钮 | `button:has-text("搜索")` | `click()` |
-| 重置按钮 | `button:has-text("重置")` | `click()` |
-| 导出按钮 | `button:has-text("导出")` | `click()` |
-| 确定按钮 | `button:has-text("确定")` | `click()` |
-| 取消按钮 | `button:has-text("取消")` | `click()` |
-| **表单** | | |
-| 文本输入框 | `input[placeholder="..."]` | `fill('value')` |
-| 下拉选择框 | `.el-select` | `selectOption('0')` |
-| 日期选择器 | `input[type="date"]` | `fill('2024-01-01')` |
-| 单选框 | `input[type="radio"]` | `check()` |
-| 复选框 | `input[type="checkbox"]` | `check()` |
-| **表格** | | |
-| 表格行 | `tbody tr` | `count()`, `nth(0)` |
-| 表格单元格 | `tbody tr td` | `textContent()` |
-| 包含文本的行 | `tbody tr:has-text("xxx")` | `click()` |
-| 第一行 | `tbody tr.first()` | `click()` |
-| **对话框** | | |
-| 对话框标题 | `.el-dialog__title` | `waitForSelector()` |
-| 对话框确定 | `.el-dialog__footer button:has-text("确定")` | `click()` |
-| 对话框取消 | `.el-dialog__footer button:has-text("取消")` | `click()` |
-| **消息提示** | | |
-| 成功消息 | `.el-message--success` | `toBeVisible()` |
-| 错误消息 | `.el-message--error` | `toBeVisible()` |
-| 警告消息 | `.el-message--warning` | `toBeVisible()` |
-| **确认框** | | |
-| 确认对话框 | `.el-message-box` | `waitForSelector()` |
-| 确认按钮 | `.el-message-box__btns button:has-text("确定")` | `click()` |
-| 取消按钮 | `.el-message-box__btns button:has-text("取消")` | `click()` |
-| **用户菜单** | | |
-| 用户头像 | `.avatar-container` | `click()` |
+| 元素类型 | 定位器 | 示例 | 注意事项 |
+|----------|--------|------|----------|
+| **菜单导航** | | | |
+| 侧边栏菜单项 | `.el-menu-item:has-text()` | `click('text=学生管理')` | - |
+| 菜单展开 | `.el-submenu:has-text()` | `click('text=Demo 模块')` | - |
+| 直接导航 | `goto('/path')` | `goto('/demo/student')` | 最可靠方式 |
+| **按钮** | | | |
+| 新增按钮 | `button:has-text("新增")` | `click()` | - |
+| 修改按钮 | `button:has-text("修改")` | `click()` | 行内按钮用 `tbody tr button` |
+| 删除按钮 | `button:has-text("删除")` | `click()` | 行内按钮用 `tbody tr button` |
+| 搜索按钮 | `button:has-text("搜索")` | `click()` | - |
+| 重置按钮 | `button:has-text("重置")` | `click()` | - |
+| 导出按钮 | `button:has-text("导出")` | `click()` | - |
+| 确定按钮 | `button:has-text("确 定")` | `click()` | ⚠️ 注意中间有空格 |
+| 取消按钮 | `button:has-text("取 消")` | `click()` | ⚠️ 注意中间有空格 |
+| 添加子表行 | `button:has-text("添加")` | `click()` | 主子表专用 |
+| **表单** | | | |
+| 文本输入框 | `input[placeholder="..."]` | `fill('value')` | 需要 `dispatchEvent('input')` |
+| 下拉选择框 | `.el-select` | 键盘操作 | ⚠️ 不是原生 select，见下方 |
+| 日期选择器 | `input[placeholder="请选择..."]` | `click()` | 弹出后选择单元格 |
+| 单选框 | `label.el-radio:has-text()` | `click()` | 点击 label 不是 input |
+| 复选框 | `label.el-checkbox:has-text()` | `click()` | 点击 label 不是 input |
+| **表格** | | | |
+| 表格行 | `tbody tr` | `count()`, `nth(0)` | - |
+| 表格单元格 | `tbody tr td` | `textContent()` | - |
+| 包含文本的行 | `tbody tr:has-text("xxx")` | `click()` | - |
+| 第一行 | `tbody tr.first()` | `click()` | - |
+| 主子表区分 | `.el-table__body tbody.first()` | - | ⚠️ 避免子表干扰 |
+| **对话框** | | | |
+| 对话框标题 | `.el-dialog__title` | `waitForSelector()` | - |
+| 对话框确定 | `button:has-text("确 定")` | `click()` | ⚠️ 注意空格 |
+| 对话框取消 | `button:has-text("取 消")` | `click()` | ⚠️ 注意空格 |
+| 值同步技巧 | `dialog.locator('.el-dialog__title').click()` | - | 让输入框失去焦点 |
+| **消息提示** | | | |
+| 成功消息 | `.el-message--success` | `toBeVisible()` | - |
+| 错误消息 | `.el-message--error` | `toBeVisible()` | - |
+| 警告消息 | `.el-message--warning` | `toBeVisible()` | - |
+| **确认框** | | | |
+| 确认对话框 | `.el-message-box` | `waitForSelector()` | - |
+| 确认按钮 | `.el-message-box__btns button:has-text("确定")` | `click()` | - |
+| **用户菜单** | | | |
+| 用户头像 | `.avatar-container` | `click()` | - |
+| 退出登录 | `text=退出登录` | `click()` | - |
+
+---
+
+### Element Plus 特殊处理
+
+#### el-select 键盘操作
+
+```javascript
+const select = dialog.locator('.el-select').first()
+await select.click()
+await page.waitForTimeout(300)
+await page.press('body', 'ArrowDown')  // 选择第一个选项
+await page.press('body', 'Enter')      // 确认
+```
+
+#### 日期选择器
+
+```javascript
+const dateInput = dialog.locator('input[placeholder="请选择生日"]')
+await dateInput.click()
+await page.waitForTimeout(300)
+const dateCell = page.locator('td:has-text("15"):visible').first()
+await dateCell.click({ force: true })
+```
+
+#### Vue 响应式同步
+
+```javascript
+const input = dialog.locator('input[placeholder="请输入..."]')
+await input.fill('value')
+await input.dispatchEvent('input')  // 触发 Vue 响应式
+```
 | 退出登录 | `text=退出登录` | `click()` |
 | 个人中心 | `text=个人中心` | `click()` |
 
