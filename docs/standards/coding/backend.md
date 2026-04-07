@@ -526,9 +526,22 @@ Date createTime = DateUtils.getNowDate();
 
 ## 参考资料
 
+### 项目文档
+
+| 文档 | 说明 |
+|------|------|
+| [ruoyi-admin](../../ruoyi-project-document/ruoyi-admin.md) | Web 服务入口模块 |
+| [ruoyi-common](../../ruoyi-project-document/ruoyi-common.md) | 通用工具模块 |
+| [ruoyi-framework](../../ruoyi-project-document/ruoyi-framework.md) | 核心框架模块 |
+| [ruoyi-system](../../ruoyi-project-document/ruoyi-system.md) | 系统管理模块 |
+| [ruoyi-quartz](../../ruoyi-project-document/ruoyi-quartz.md) | 定时任务模块 |
+| [ruoyi-generator](../../ruoyi-project-document/ruoyi-generator.md) | 代码生成器模块 |
+| [ruoyi-gen-cli 操作手册](../../ruoyi-project-document/ruoyi-gen-cli_操作手册.md) | 代码生成 CLI 工具使用指南 |
+
+### 外部资源
+
 - [RuoYi 官方文档](http://doc.ruoyi.vip/)
-- [ruoyi-admin 模块文档](../../ruoyi-project-document/ruoyi-admin.md)
-- [ruoyi-common 模块文档](../../ruoyi-project-document/ruoyi-common.md)
+- [RuoYi GitHub](https://github.com/yangzongzhuan/RuoYi-Vue)
 
 ---
 
