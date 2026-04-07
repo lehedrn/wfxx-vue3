@@ -31,7 +31,6 @@ scripts/run-backend.sh -s # 停止服务
 scripts/run-backend.sh -r # 重启服务
 scripts/run-backend.sh --health  # 健康检查
 scripts/run-backend.sh --status  # 查看状态
-scripts/test.sh           # 运行测试
 scripts/clean.sh          # 清理构建产物
 scripts/clean.sh --dry-run  # 预览清理内容
 ```

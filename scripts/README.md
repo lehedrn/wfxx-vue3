@@ -11,7 +11,6 @@
 | [build.sh](#buildsh) | 构建后端项目 | `scripts/build.sh -q` |
 | [run-backend.sh](#run-backendsh) | 运行后端服务 | `scripts/run-backend.sh -d` |
 | [run-frontend.sh](#run-frontendsh) | 运行前端服务 | `scripts/run-frontend.sh -d` |
-| [test.sh](#testsh) | 运行测试 | `scripts/test.sh` |
 | [clean.sh](#cleansh) | 清理构建产物 | `scripts/clean.sh` |
 | [gen-code.sh](#gen-codesh) | 代码生成器 | `scripts/gen-code.sh demo student` |
 
@@ -209,59 +208,6 @@ scripts/run-frontend.sh -i
 ### 自动安装依赖
 
 如果 `node_modules` 不存在，启动时会自动运行 `pnpm install` 安装依赖。
-
----
-
-## test.sh
-
-运行测试脚本。
-
-### 用法
-
-```bash
-scripts/test.sh [选项]
-```
-
-### 选项
-
-| 选项 | 简写 | 说明 |
-|------|------|------|
-| `--unit` | `-u` | 运行单元测试 |
-| `--integration` | `-i` | 运行集成测试 |
-| `--file` | `-f` | 运行指定测试类 |
-| `--help` | `-h` | 显示帮助 |
-
-### 示例
-
-```bash
-# 运行所有测试
-scripts/test.sh
-
-# 运行单元测试
-scripts/test.sh -u
-
-# 运行集成测试
-scripts/test.sh -i
-
-# 运行指定测试类
-scripts/test.sh -f UserServiceTest
-
-# 查看帮助
-scripts/test.sh --help
-```
-
-### 测试类型
-
-| 类型 | 匹配模式 | 说明 |
-|------|----------|------|
-| 所有测试 | - | 运行所有测试 |
-| 单元测试 | `**/*Test.java` | 单元测试文件 |
-| 集成测试 | `**/*IT.java` | 集成测试文件 |
-| 指定测试 | 用户指定 | 指定的测试类 |
-
-### 输出
-
-- 测试日志：`logs/backend/test-YYYYMMDD-HHMMSS.log`
 
 ---
 
