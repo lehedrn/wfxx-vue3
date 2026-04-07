@@ -127,9 +127,9 @@ scripts/gen-code.sh --list                # 列出可用配置
 | 规范文档索引 | [standards/README.md](./docs/standards/README.md) | ✅ 已创建 |
 | 编码规范 | [后端](./docs/standards/coding/backend.md) / [前端](./docs/standards/coding/frontend.md) | ✅ 已创建 |
 | 需求文档规范 | [standards/requirement.md](./docs/standards/requirement.md) | 待创建 |
-| 提交规范 | [standards/commit.md](./docs/standards/commit.md) | 待创建 |
-| 自动化测试规范 | [standards/testing.md](./docs/standards/testing.md) | 待创建 |
-| API 设计规范 | [standards/api-design.md](./docs/standards/api-design.md) | 待创建 |
+| 提交规范 | [standards/commit.md](./docs/standards/commit.md) | ✅ 已创建 |
+| 自动化测试规范 | [后端接口测试](./standards/testing.md) / [E2E 联调测试](./standards/e2e-testing.md) | ✅ 已创建 |
+| API 设计规范 | [standards/api-design.md](./docs/standards/api-design.md) | ✅ 已创建 |
 
 ---
 
