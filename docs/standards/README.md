@@ -19,7 +19,7 @@
 | 文档 | 说明 | 状态 |
 |------|------|------|
 | [需求文档规范](./requirement.md) | 需求文档编写规范 | 待创建 |
-| [提交规范](./commit.md) | Git 提交信息规范 | 待创建 |
+| [提交规范](./commit.md) | Git 提交信息规范 | ✅ 已创建 |
 | [自动化测试规范](./testing.md) | 单元测试和集成测试规范 | 待创建 |
 
 ---
@@ -34,7 +34,7 @@ docs/standards/
 │   ├── frontend.md        # 前端编码规范
 │   └── api-design.md      # API 设计规范
 ├── requirement.md         # 需求文档规范（待创建）
-├── commit.md              # 提交规范（待创建）
+├── commit.md              # 提交规范
 └── testing.md             # 自动化测试规范（待创建）
 ```
 
