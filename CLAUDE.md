@@ -144,8 +144,8 @@ scripts/gen-code.sh --list                # 列出可用配置
 - [规范文档索引](./docs/standards/README.md) *(待创建)*
 
 ### 变更记录
-- [交互记录](./docs/changelogs/) *(待创建)*
-- [经验总结](./docs/lessons/) *(待创建)*
+- [交互记录](./docs/changelogs/) - 记录每次 AI 交互内容
+- [经验总结](./docs/lessons/) - 技术实践和经验总结
 
 ---
 
