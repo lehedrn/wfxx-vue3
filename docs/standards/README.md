@@ -12,6 +12,7 @@
 |------|------|------|
 | [后端编码规范](./coding/backend.md) | Spring Boot + Java 编码规范（RuoYi 风格） | ✅ 已创建 |
 | [前端编码规范](./coding/frontend.md) | Vue 3 编码规范（RuoYi 风格） | ✅ 已创建 |
+| [API 设计规范](./api-design.md) | RESTful API 设计规范 | ✅ 已创建 |
 
 ### 其他规范
 
@@ -20,7 +21,6 @@
 | [需求文档规范](./requirement.md) | 需求文档编写规范 | 待创建 |
 | [提交规范](./commit.md) | Git 提交信息规范 | 待创建 |
 | [自动化测试规范](./testing.md) | 单元测试和集成测试规范 | 待创建 |
-| [API 设计规范](./api-design.md) | RESTful API 设计规范 | ✅ 已创建 |
 
 ---
 
@@ -31,11 +31,11 @@ docs/standards/
 ├── README.md              # 本索引文件
 ├── coding/                # 编码规范目录
 │   ├── backend.md         # 后端编码规范
-│   └── frontend.md        # 前端编码规范
-├── requirement.md         # 需求文档规范
-├── commit.md              # 提交规范
-├── testing.md             # 自动化测试规范
-└── api-design.md          # API 设计规范
+│   ├── frontend.md        # 前端编码规范
+│   └── api-design.md      # API 设计规范
+├── requirement.md         # 需求文档规范（待创建）
+├── commit.md              # 提交规范（待创建）
+└── testing.md             # 自动化测试规范（待创建）
 ```
 
 ---
