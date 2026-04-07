@@ -16,24 +16,42 @@ RuoYi-Vue 3.9.2 - 基于 Spring Boot 4.x + Vue 3 的前后端分离快速开发�
 
 ## 2. 快速命令
 
-详细脚本请参考 `scripts/` 目录。
+详细脚本请参考 `scripts/` 目录，完整使用指南见 [scripts/README.md](scripts/README.md)。
 
 ### 后端
 ```bash
-scripts/build.sh          # 构建后端
+scripts/build.sh          # 构建后端（完整构建）
+scripts/build.sh -q       # 快速构建（清理 + 跳过测试）
+scripts/build.sh -i       # 安装到本地 Maven 仓库
+scripts/build.sh -m ruoyi-admin  # 构建指定模块
+scripts/build.sh --help   # 查看帮助
 scripts/run-backend.sh    # 运行后端（端口 18080）
+scripts/run-backend.sh -d # 后台运行（等待启动完成）
+scripts/run-backend.sh -s # 停止服务
+scripts/run-backend.sh -r # 重启服务
+scripts/run-backend.sh --health  # 健康检查
+scripts/run-backend.sh --status  # 查看状态
 scripts/test.sh           # 运行测试
+scripts/clean.sh          # 清理构建产物
+scripts/clean.sh --dry-run  # 预览清理内容
 ```
 
 ### 前端
 ```bash
 scripts/run-frontend.sh   # 运行前端（端口 3888，使用 pnpm）
+scripts/run-frontend.sh -d  # 后台运行（等待启动完成）
+scripts/run-frontend.sh -i  # 安装依赖
+scripts/run-frontend.sh -s  # 停止服务
+scripts/run-frontend.sh --health  # 健康检查
+scripts/run-frontend.sh --status  # 查看状态
 ```
 
 ### 代码生成
 ```bash
-scripts/gen-code.sh <sql 文件> <配置文件> [输出文件]
-# 示例：scripts/gen-code.sh student.sql student.yml output.zip
+# 用法：scripts/gen-code.sh <module> <submodule> [配置文件名]
+scripts/gen-code.sh demo student
+scripts/gen-code.sh demo student student  # 指定配置文件名（不含后缀）
+scripts/gen-code.sh --list                # 列出可用配置
 ```
 
 ---
@@ -137,6 +155,38 @@ scripts/gen-code.sh <sql 文件> <配置文件> [输出文件]
 - 日志目录：`logs/backend/` 和 `logs/frontend/`
 - 包管理器：前端使用 pnpm
 - 已知问题：暂无
+
+---
+
+## 8. 项目配置
+
+### 8.1 项目根目录
+
+**多人在发时，请在 CLAUDE.md 中配置项目根目录绝对路径**：
+
+```bash
+# 项目根目录绝对路径（请根据实际位置修改）
+PROJECT_ROOT="/home/workspace/com/wfxx-vue3"
+```
+
+### 8.2 代码生成目录结构
+
+```
+${PROJECT_ROOT}/
+├── generate/
+│   ├── config/          # 代码生成配置文件
+│   │   └── {module}/
+│   │       └── {submodule}/
+│   │           ├── *.sql
+│   │           └── *.yml
+│   └── output/          # 代码生成输出
+│       └── {module}/
+│           └── {submodule}/
+│               └── *.zip
+└── ruoyi-gen-cli/
+    └── target/
+        └── ruoyi-gen-cli.jar   # 代码生成器 JAR
+```
 
 ---
 
