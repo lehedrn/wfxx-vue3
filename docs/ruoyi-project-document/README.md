@@ -14,6 +14,7 @@
 
 | 模块 | 说明 | 文档 |
 |------|------|------|
+| 📋 **开发环境配置** | 本地开发环境配置指南 | [详情](./00-开发环境配置.md) |
 | 🖥️ **ruoyi-admin** | Web 服务入口模块 | [详情](./ruoyi-admin.md) |
 | 🔧 **ruoyi-common** | 通用工具模块 | [详情](./ruoyi-common.md) |
 | 🏗️ **ruoyi-framework** | 核心框架模块 | [详情](./ruoyi-framework.md) |
@@ -228,6 +229,7 @@ ruoyi-system/
 ```
 docs/ruoyi-project-document/
 ├── README.md                      # 本索引文件
+├── 00-开发环境配置.md              # 本地开发环境配置
 ├── ruoyi-admin.md                 # Admin 模块入口
 ├── ruoyi-admin/
 │   ├── config.md
@@ -306,6 +308,7 @@ docs/ruoyi-project-document/
 
 | 模块 | 文档数量 |
 |------|---------|
+| 开发环境配置 | 1 篇 |
 | ruoyi-admin | 4 篇 |
 | ruoyi-common | 9 篇 |
 | ruoyi-framework | 8 篇 |
@@ -314,7 +317,7 @@ docs/ruoyi-project-document/
 | ruoyi-generator | 6 篇 |
 | ruoyi-gen-cli | 9 篇 + 操作手册 |
 | ruoyi-ui | 10 篇 |
-| **总计** | **56 篇** |
+| **总计** | **57 篇** |
 
 ---
 
