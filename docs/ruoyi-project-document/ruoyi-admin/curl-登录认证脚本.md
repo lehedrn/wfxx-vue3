@@ -879,7 +879,7 @@ chmod +x scripts/test/curl/test-demo-api.sh
 
 ## 12. 参考文档
 
-- [后端接口自动化测试规范](../../standards/testing.md)
+- [后端接口自动化测试规范](../../standards/test/backend-api.md)
 - [登录认证流程详解](03-登录认证流程.md)
 - [API 设计规范](../../standards/api-design.md)
 

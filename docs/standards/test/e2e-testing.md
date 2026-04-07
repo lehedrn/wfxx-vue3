@@ -1235,7 +1235,7 @@ if (await errorMessage.count() > 0) {
 ## 参考文档
 
 - [Playwright 官方文档](https://playwright.dev)
-- [后端接口自动化测试规范](testing.md)
+- [后端接口自动化测试规范](backend-api.md)
 - [API 设计规范](api-design.md)
 
 ---

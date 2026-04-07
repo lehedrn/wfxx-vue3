@@ -20,8 +20,13 @@
 |------|------|------|
 | [需求文档规范](./requirement.md) | 需求文档编写规范 | 待创建 |
 | [提交规范](./commit.md) | Git 提交信息规范 | ✅ 已创建 |
-| [后端接口测试规范](./testing.md) | curl 后端 API 测试规范 | ✅ 已创建 |
-| [E2E 联调测试规范](./e2e-testing.md) | Playwright 前后端联调测试规范 | ✅ 已创建 |
+
+### 测试规范
+
+| 文档 | 说明 | 状态 |
+|------|------|------|
+| [后端接口测试规范](./test/backend-api.md) | curl 后端 API 测试规范 | ✅ 已创建 |
+| [E2E 联调测试规范](./test/e2e-testing.md) | Playwright 前后端联调测试规范 | ✅ 已创建 |
 
 ---
 
@@ -34,10 +39,11 @@ docs/standards/
 │   ├── backend.md         # 后端编码规范
 │   ├── frontend.md        # 前端编码规范
 │   └── api-design.md      # API 设计规范
+├── test/                  # 测试规范目录
+│   ├── backend-api.md     # 后端接口测试规范（curl）
+│   └── e2e-testing.md     # E2E 联调测试规范（Playwright）
 ├── requirement.md         # 需求文档规范（待创建）
-├── commit.md              # 提交规范
-├── testing.md             # 后端接口测试规范（curl）
-└── e2e-testing.md         # E2E 联调测试规范（Playwright）
+└── commit.md              # 提交规范
 ```
 
 ---
