@@ -68,6 +68,19 @@ ruoyi-ui/yarn.lock
 ruoyi-ui/pnpm-lock.yaml
 ruoyi-ui/pnpm-workspace.yaml
 
+######################################################################
+# e2e
+scripts/test/e2e/node_modules/
+scripts/test/e2e/reports/
+
+scripts/test/e2e/tests/**/playwright-browsers/
+
+scripts/test/e2e/tests/**/*.png
+scripts/test/e2e/tests/**/*.webm
+
+scripts/test/e2e/tests/**/*.tmp
+scripts/test/e2e/tests/**/*.log
+
 ########################################################################
 # my
 upload_path
