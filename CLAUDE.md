@@ -139,6 +139,7 @@ scripts/gen-code.sh --list                # 列出可用配置
 - [文档总索引](./docs/ruoyi-project-document/README.md)
 - [ruoyi-gen-cli 操作手册](./docs/ruoyi-project-document/ruoyi-gen-cli_操作手册.md)
 - [前端 ruoyi-ui](./docs/ruoyi-project-document/ruoyi-ui.md)
+- [新建子模块指南](./docs/ruoyi-project-document/新建子模块指南.md)
 
 ### 规范文档
 - [规范文档索引](./docs/standards/README.md) *(待创建)*
@@ -190,4 +191,4 @@ ${PROJECT_ROOT}/
 
 ---
 
-**最后更新**: 2026-04-07
+**最后更新**: 2026-04-08
