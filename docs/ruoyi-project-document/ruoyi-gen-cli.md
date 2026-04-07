@@ -34,6 +34,7 @@ java -jar ruoyi-gen-cli.jar \
 
 | 文档 | 说明 |
 |------|------|
+| **[操作手册](./ruoyi-gen-cli_操作手册.md)** | **团队标准操作规范（SOP）** |
 | [概述](./ruoyi-gen-cli/01-概述.md) | 项目简介、特点、使用场景 |
 | [快速开始](./ruoyi-gen-cli/02-快速开始.md) | 安装、配置、第一个生成示例 |
 | [配置说明](./ruoyi-gen-cli/03-配置说明.md) | YAML 配置文件详解 |
