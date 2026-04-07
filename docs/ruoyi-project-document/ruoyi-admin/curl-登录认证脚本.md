@@ -642,9 +642,9 @@ brew install jq
 
 3. **运行完整测试**
    ```bash
-   # 保存完整测试脚本为 test-login.sh
-   chmod +x test-login.sh
-   ./test-login.sh
+   # 测试脚本位于 scripts/test/curl/ 目录
+   chmod +x scripts/test/curl/test-login.sh
+   ./scripts/test/curl/test-login.sh
    ```
 
 ---
@@ -653,7 +653,7 @@ brew install jq
 
 ### 学生管理模块
 
-**测试脚本**: `scripts/test-demo-api.sh`
+**测试脚本**: `scripts/test/curl/test-demo-api.sh`
 
 #### 新增学生
 
@@ -842,14 +842,14 @@ echo "$response" | jq '.'
 运行完整的 Demo 模块测试：
 
 ```bash
-chmod +x scripts/test-demo-api.sh
-./scripts/test-demo-api.sh
+chmod +x scripts/test/curl/test-demo-api.sh
+./scripts/test/curl/test-demo-api.sh
 ```
 
 **测试统计**：
-- 学生管理模块：7 个接口
-- 产品管理模块：7 个接口
-- 客户管理模块：7 个接口
+- 学生管理模块：7 个接口（简单 CRUD 示例）
+- 产品管理模块：7 个接口（树形列表示例）
+- 客户管理模块：7 个接口（主子表示例）
 - 总计：21 个接口调用
 
 **输出示例**：

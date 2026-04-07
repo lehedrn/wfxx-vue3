@@ -70,17 +70,29 @@ public interface UserService { }
 | 分页查询 | 查询方法 + `startPage()` | `startPage(); selectList()` |
 
 ```java
-// Controller 层方法
+// Controller 层方法 - 分页查询（适用于平铺列表）
 @GetMapping("/list")
 public TableDataInfo list(SysUser user) {
-    startPage();
+    startPage();  // 仅平铺列表需要分页
     List<SysUser> list = userService.selectUserList(user);
     return getDataTable(list);
+}
+
+// Controller 层方法 - 树形查询（不需要分页）
+@GetMapping("/list")
+public AjaxResult list(SysDept dept) {
+    List<SysDept> list = deptService.selectDeptList(dept);
+    return AjaxResult.success(list);
 }
 
 // Service 层方法
 public List<SysUser> selectUserList(SysUser user);
 ```
+
+**说明**：
+- 分页适用于平铺列表（如用户列表、订单列表）
+- 树形结构（如部门树、菜单树）通常不需要分页，直接返回树形结构
+- 是否分页取决于业务场景，不是所有列表都需要分页
 
 ### 2.3 常量命名
 
@@ -253,25 +265,67 @@ public AjaxResult add(@Validated @RequestBody SysUser user)
 
 ### 5.1 统一响应类型
 
-| 方法 | 返回类型 | 用途 |
-|------|---------|------|
-| 查询列表 | `TableDataInfo` | 分页列表数据 |
-| 查询单个 | `AjaxResult` | 单个对象数据 |
-| 新增/修改/删除 | `AjaxResult` | 操作结果 |
-| 导出 | `void` | 直接写入响应流 |
+| 方法 | 返回类型 | 用途 | 示例 |
+|------|---------|------|------|
+| 查询列表（分页） | `TableDataInfo` | 平铺列表数据（用户、订单等） | `getDataTable(list)` |
+| 查询列表（树形） | `AjaxResult` | 树形结构数据（部门、菜单等） | `success(list)` |
+| 查询单个 | `AjaxResult` | 单个对象数据 | `success(user)` |
+| 新增/修改/删除 | `AjaxResult` | 操作结果 | `toAjax(result)` |
+| 导出 | `void` | 直接写入响应流 | `exportExcel(response, list)` |
 
 ### 5.2 响应方法
 
 ```java
 // Controller 继承 BaseController，可直接使用以下方法：
 
-// 返回 TableDataInfo（分页列表）
+// 1. 返回 TableDataInfo（分页列表，适用于平铺数据）
 startPage();
 List<SysUser> list = userService.selectUserList(user);
 return getDataTable(list);
 
-// 返回 AjaxResult（操作结果）
+// 2. 返回 AjaxResult（树形列表，适用于树形结构）
+List<SysDept> list = deptService.selectDeptList(dept);
+return success(list);  // 注意：树形结构不分页，直接返回 data 数组
+
+// 3. 返回 AjaxResult（操作结果）
 return toAjax(userService.insertUser(user));
+
+// 4. 成功/失败
+return AjaxResult.success("操作成功");
+return AjaxResult.error("操作失败");
+```
+
+### 5.3 响应格式
+
+**TableDataInfo（分页列表）**：
+```json
+{
+  "code": 200,
+  "msg": "查询成功",
+  "total": 100,
+  "rows": [{"userId": 1, "userName": "admin", ...}]
+}
+```
+
+**AjaxResult（树形列表/单个对象）**：
+```json
+{
+  "code": 200,
+  "msg": "查询成功",
+  "data": [
+    {"deptId": 1, "deptName": "总公司", "children": [...]},
+    {"deptId": 2, "deptName": "分公司", "children": [...]}
+  ]
+}
+```
+
+```json
+{
+  "code": 200,
+  "msg": "操作成功",
+  "data": {"userId": 1, "userName": "admin", ...}
+}
+```
 
 // 成功
 return AjaxResult.success("操作成功");

@@ -15,10 +15,21 @@
 
 ```
 scripts/
-├── test-login.sh          # 登录认证测试脚本
-├── test-demo-api.sh       # Demo 模块接口测试脚本
-└── test-*.sh              # 其他模块测试脚本
+├── test.sh                # 测试入口脚本
+└── test/
+    ├── curl/              # curl 测试脚本
+    │   ├── test-login.sh          # 登录认证测试脚本
+    │   └── test-demo-api.sh       # Demo 模块接口测试脚本
+    └── junit/             # JUnit 单元测试脚本（待创建）
 ```
+
+### 示例分类
+
+| 示例 | 脚本 | 对应模块 | 说明 |
+|------|------|----------|------|
+| 简单 CRUD | `test-demo-api.sh` 学生管理 | `demo_student` | 单表增查改删示例 |
+| 树形列表 | `test-demo-api.sh` 产品管理 | `demo_product` | 树形结构查询示例 |
+| 主子表 | `test-demo-api.sh` 客户管理 | `demo_customer` | 主表 + 子表（商品列表）操作示例 |
 
 ---
 
@@ -303,7 +314,11 @@ info "后端服务运行正常"
 
 ## 完整示例
 
-### 学生管理模块测试
+### 示例 1：简单 CRUD（学生管理模块）
+
+**场景**：单表增删改查，无关联数据
+
+**测试脚本**: `scripts/test/curl/test-demo-api.sh`
 
 ```bash
 #!/bin/bash
@@ -340,23 +355,70 @@ login() {
     info "登录成功"
 }
 
-# 测试学生模块
+# 测试学生模块（简单 CRUD）
 test_student() {
+    # 1. 查询列表（分页）
     step "查询学生列表..."
-    local response=$(curl -s -X GET "$BASE_URL/demo/student/list" \
+    local response=$(curl -s -X GET "$BASE_URL/demo/student/list?pageNum=1&pageSize=10" \
         -H "Authorization: $TOKEN")
     local code=$(echo "$response" | jq -r '.code')
     [ "$code" != "200" ] && error "查询失败" && exit 1
-    info "列表查询成功"
+    local total=$(echo "$response" | jq -r '.total')
+    info "学生总数：$total"
 
+    # 2. 新增
     step "新增学生..."
-    local data='{"name":"测试","age":20,"sex":"0","status":"0","birthday":"2006-01-01","studentHobby":"1"}'
+    local add_data='{
+        "name": "张三",
+        "age": 20,
+        "sex": "0",
+        "status": "0",
+        "birthday": "2006-01-15",
+        "studentHobby": "3"
+    }'
     response=$(curl -s -X POST "$BASE_URL/demo/student" \
         -H "Authorization: $TOKEN" \
         -H "Content-Type: application/json" \
-        -d "$data")
+        -d "$add_data")
     code=$(echo "$response" | jq -r '.code')
     [ "$code" == "200" ] && info "新增成功" || info "新增响应：$(echo "$response" | jq -r '.msg')"
+
+    # 3. 查询详情
+    step "查询学生详情..."
+    response=$(curl -s -X GET "$BASE_URL/demo/student/list?pageNum=1&pageSize=10" \
+        -H "Authorization: $TOKEN")
+    local first_id=$(echo "$response" | jq -r '.rows[0].id // null')
+    if [ "$first_id" != "null" ] && [ -n "$first_id" ]; then
+        response=$(curl -s -X GET "$BASE_URL/demo/student/$first_id" \
+            -H "Authorization: $TOKEN")
+        code=$(echo "$response" | jq -r '.code')
+        [ "$code" == "200" ] && info "查询详情成功"
+    fi
+
+    # 4. 修改
+    step "修改学生..."
+    local update_data="{
+        \"id\": $first_id,
+        \"name\": \"张三修改\",
+        \"age\": 21,
+        \"sex\": \"0\",
+        \"status\": \"0\",
+        \"birthday\": \"2006-01-15\",
+        \"studentHobby\": \"1\"
+    }"
+    response=$(curl -s -X PUT "$BASE_URL/demo/student" \
+        -H "Authorization: $TOKEN" \
+        -H "Content-Type: application/json" \
+        -d "$update_data")
+    code=$(echo "$response" | jq -r '.code')
+    [ "$code" == "200" ] && info "修改成功"
+
+    # 5. 删除
+    step "删除学生..."
+    response=$(curl -s -X DELETE "$BASE_URL/demo/student/$first_id" \
+        -H "Authorization: $TOKEN")
+    code=$(echo "$response" | jq -r '.code')
+    [ "$code" == "200" ] && info "删除成功"
 
     info "学生模块测试完成"
 }
@@ -375,6 +437,163 @@ main() {
 }
 
 main
+```
+
+**响应格式**：
+```json
+{
+  "code": 200,
+  "msg": "操作成功",
+  "total": 10,
+  "rows": [{"id": 1, "name": "张三", "age": 20, ...}]
+}
+```
+
+---
+
+### 示例 2：树形列表（产品管理模块）
+
+**场景**：树形结构数据，不支持分页，按树形展示
+
+**关键差异**：
+- 列表接口返回格式：`{code: 200, data: [...]}`（不是 `rows`）
+- 通常不需要分页（树形数据量一般不大）
+- 包含 `parentId` 字段维护树形关系
+
+```bash
+# 查询产品列表（树形，不分页）
+step "查询产品列表..."
+local response=$(curl -s -X GET "$BASE_URL/demo/product/list" \
+    -H "Authorization: $TOKEN")
+local code=$(echo "$response" | jq -r '.code')
+[ "$code" != "200" ] && error "查询失败" && exit 1
+
+# 注意：树形列表返回的是 .data 而不是 .rows
+local product_count=$(echo "$response" | jq -r '.data | length')
+info "产品总数：$product_count"
+
+# 提取第一个产品 ID（使用 .data[0]）
+local first_id=$(echo "$response" | jq -r '.data[0].id // null')
+
+# 新增产品（需要指定 parentId）
+step "新增产品..."
+local add_data='{
+    "name": "测试产品 A",
+    "status": "0",
+    "parentId": 0,
+    "orderNum": 1
+}'
+response=$(curl -s -X POST "$BASE_URL/demo/product" \
+    -H "Authorization: $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$add_data")
+```
+
+**响应格式**：
+```json
+{
+  "code": 200,
+  "msg": "查询成功",
+  "data": [
+    {"id": 1, "name": "电子产品", "parentId": 0, "children": [...]},
+    {"id": 2, "name": "食品饮料", "parentId": 0, "children": [...]}
+  ]
+}
+```
+
+---
+
+### 示例 3：主子表（客户管理模块）
+
+**场景**：主表（客户）+ 子表（商品列表），新增/修改时需要同时处理子表数据
+
+**关键差异**：
+- 实体类包含 `List<Goods> goodsList` 字段
+- 新增/修改时需要构造子表数据
+- 删除主表时子表数据级联删除
+
+```bash
+# 新增客户（包含商品列表）
+step "新增客户..."
+local add_data='{
+    "customerName": "测试客户",
+    "phonenumber": "13800138000",
+    "sex": "0",
+    "birthday": "1990-01-01",
+    "remark": "测试客户备注",
+    "goodsList": [
+        {
+            "goodsName": "商品 A",
+            "price": 99.00,
+            "stock": 100
+        },
+        {
+            "goodsName": "商品 B",
+            "price": 199.00,
+            "stock": 50
+        }
+    ]
+}'
+response=$(curl -s -X POST "$BASE_URL/demo/customer" \
+    -H "Authorization: $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$add_data")
+code=$(echo "$response" | jq -r '.code')
+[ "$code" == "200" ] && info "新增成功"
+
+# 查询详情（检查子表数据）
+step "查询客户详情..."
+response=$(curl -s -X GET "$BASE_URL/demo/customer/$customer_id" \
+    -H "Authorization: $TOKEN")
+code=$(echo "$response" | jq -r '.code')
+if [ "$code" == "200" ]; then
+    # 检查是否有商品列表
+    local has_goods=$(echo "$response" | jq -r '.data.goodsList // null')
+    if [ "$has_goods" != "null" ]; then
+        local goods_count=$(echo "$response" | jq -r '.data.goodsList | length')
+        info "客户包含商品信息，共 $goods_count 个商品"
+    fi
+fi
+
+# 修改客户（更新商品列表）
+step "修改客户（更新商品列表）..."
+local update_data="{
+    \"customerId\": $customer_id,
+    \"customerName\": \"测试客户修改\",
+    \"phonenumber\": \"13800138001\",
+    \"sex\": \"1\",
+    \"birthday\": \"1991-02-02\",
+    \"remark\": \"修改后的备注\",
+    \"goodsList\": [
+        {
+            \"goodsId\": 1,
+            \"goodsName\": \"商品 A 修改\",
+            \"price\": 109.00,
+            \"stock\": 90
+        }
+    ]
+}"
+response=$(curl -s -X PUT "$BASE_URL/demo/customer" \
+    -H "Authorization: $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$update_data")
+```
+
+**响应格式**：
+```json
+{
+  "code": 200,
+  "msg": "操作成功",
+  "data": {
+    "customerId": 1,
+    "customerName": "张晨曦",
+    "phonenumber": "13800138000",
+    "goodsList": [
+      {"goodsId": 1, "goodsName": "商品 A", "price": 99.00},
+      {"goodsId": 2, "goodsName": "商品 B", "price": 199.00}
+    ]
+  }
+}
 ```
 
 ---
