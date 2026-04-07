@@ -185,7 +185,7 @@ public AjaxResult add(@Validated @RequestBody SysUser user)
 | [controller.md](ruoyi-admin/controller.md) | 控制器层 API 接口文档（所有 REST 接口） |
 | [03-登录认证流程.md](ruoyi-admin/03-登录认证流程.md) | 登录认证完整流程解析（验证码、Token、JWT） |
 | [04-权限验证流程.md](ruoyi-admin/04-权限验证流程.md) | 权限验证机制详解（@PreAuthorize、数据权限） |
-| [登录认证-curl 测试脚本.md](./登录认证-curl 测试脚本.md) | 登录认证流程 curl 测试脚本（Postman 集合） |
+| [06-登录认证 -curl 测试.md](./06-登录认证-curl 测试.md) | 登录认证流程 curl 测试脚本（Postman 集合） |
 
 ---
 
