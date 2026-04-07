@@ -40,7 +40,7 @@ java -jar ruoyi-gen-cli.jar \
 | [命令参考](./ruoyi-gen-cli/04-命令参考.md) | CLI 命令参数说明 |
 | [核心模块](./ruoyi-gen-cli/05-核心模块.md) | 核心模块源码分析 |
 | [最佳实践](./ruoyi-gen-cli/06-最佳实践.md) | 使用技巧、常见问题 |
-| [SQL 配置详解](./ruoyi-gen-cli/07-SQL 配置详解.md) | DDL SQL 语法规范、完整示例 |
+| [SQL 配置详解](./ruoyi-gen-cli/07-SQL_配置详解.md) | DDL SQL 语法规范、完整示例 |
 | [配置模板](./ruoyi-gen-cli/08-配置模板.md) | 三种模板类型的 YAML 配置模板 |
 
 ## 支持的模板类型
