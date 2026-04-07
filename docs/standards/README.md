@@ -20,7 +20,7 @@
 | [需求文档规范](./requirement.md) | 需求文档编写规范 | 待创建 |
 | [提交规范](./commit.md) | Git 提交信息规范 | 待创建 |
 | [自动化测试规范](./testing.md) | 单元测试和集成测试规范 | 待创建 |
-| [API 设计规范](./api-design.md) | RESTful API 设计规范 | 待创建 |
+| [API 设计规范](./api-design.md) | RESTful API 设计规范 | ✅ 已创建 |
 
 ---
 
@@ -65,4 +65,4 @@ docs/standards/
 
 ---
 
-**最后更新**: 2026-04-07
+**最后更新**: 2026-04-08
