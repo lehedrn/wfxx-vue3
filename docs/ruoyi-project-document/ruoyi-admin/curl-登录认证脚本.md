@@ -649,5 +649,241 @@ brew install jq
 
 ---
 
+## 11. Demo 模块接口测试示例
+
+### 学生管理模块
+
+**测试脚本**: `scripts/test-demo-api.sh`
+
+#### 新增学生
+
+```bash
+BASE_URL="http://localhost:18080"
+TOKEN="your_token_here"
+
+# 新增学生
+add_data='{
+    "name": "张三",
+    "age": 20,
+    "sex": "0",
+    "status": "0",
+    "birthday": "2006-01-15",
+    "studentHobby": "3"
+}'
+
+response=$(curl -s -X POST "$BASE_URL/demo/student" \
+    -H "Authorization: $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$add_data")
+
+echo "$response" | jq '.'
+```
+
+#### 查询学生列表
+
+```bash
+# 查询列表（分页）
+response=$(curl -s -X GET "$BASE_URL/demo/student/list?pageNum=1&pageSize=10" \
+    -H "Authorization: $TOKEN")
+
+echo "$response" | jq '.'
+
+# 提取学生总数
+total=$(echo "$response" | jq -r '.total')
+echo "学生总数：$total"
+
+# 提取第一个学生 ID
+first_id=$(echo "$response" | jq -r '.rows[0].id // null')
+echo "第一个学生 ID: $first_id"
+```
+
+#### 查询学生详情
+
+```bash
+# 查询详情
+student_id="1"
+response=$(curl -s -X GET "$BASE_URL/demo/student/$student_id" \
+    -H "Authorization: $TOKEN")
+
+echo "$response" | jq '.'
+
+# 提取学生姓名
+name=$(echo "$response" | jq -r '.data.name')
+echo "学生姓名：$name"
+```
+
+#### 修改学生
+
+```bash
+# 修改学生
+update_data='{
+    "id": 1,
+    "name": "张三修改",
+    "age": 21,
+    "sex": "0",
+    "status": "0",
+    "birthday": "2006-01-15",
+    "studentHobby": "1"
+}'
+
+response=$(curl -s -X PUT "$BASE_URL/demo/student" \
+    -H "Authorization: $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$update_data")
+
+echo "$response" | jq '.'
+```
+
+#### 删除学生
+
+```bash
+# 删除学生
+student_id="1"
+response=$(curl -s -X DELETE "$BASE_URL/demo/student/$student_id" \
+    -H "Authorization: $TOKEN")
+
+echo "$response" | jq '.'
+```
+
+---
+
+### 产品管理模块
+
+**接口前缀**: `/demo/product`
+
+#### 新增产品
+
+```bash
+add_data='{
+    "name": "测试产品 A",
+    "status": "0",
+    "parentId": 0,
+    "orderNum": 1
+}'
+
+response=$(curl -s -X POST "$BASE_URL/demo/product" \
+    -H "Authorization: $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$add_data")
+
+echo "$response" | jq '.'
+```
+
+#### 查询产品列表
+
+```bash
+# 产品列表返回格式：{code: 200, data: [...]}
+response=$(curl -s -X GET "$BASE_URL/demo/product/list" \
+    -H "Authorization: $TOKEN")
+
+echo "$response" | jq '.'
+
+# 提取第一个产品 ID
+first_id=$(echo "$response" | jq -r '.data[0].id // null')
+```
+
+---
+
+### 客户管理模块
+
+**接口前缀**: `/demo/customer`
+
+#### 新增客户（含商品列表）
+
+```bash
+add_data='{
+    "customerName": "测试客户",
+    "phonenumber": "13800138000",
+    "sex": "0",
+    "birthday": "1990-01-01",
+    "remark": "测试客户备注",
+    "goodsList": []
+}'
+
+response=$(curl -s -X POST "$BASE_URL/demo/customer" \
+    -H "Authorization: $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$add_data")
+
+echo "$response" | jq '.'
+```
+
+#### 修改客户（更新商品列表）
+
+```bash
+update_data='{
+    "customerId": 1,
+    "customerName": "测试客户修改",
+    "phonenumber": "13800138001",
+    "sex": "1",
+    "birthday": "1991-02-02",
+    "remark": "修改后的备注",
+    "goodsList": [
+        {
+            "goodsName": "商品 A",
+            "price": 99.00,
+            "stock": 100
+        }
+    ]
+}'
+
+response=$(curl -s -X PUT "$BASE_URL/demo/customer" \
+    -H "Authorization: $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "$update_data")
+
+echo "$response" | jq '.'
+```
+
+---
+
+### 完整测试流程
+
+运行完整的 Demo 模块测试：
+
+```bash
+chmod +x scripts/test-demo-api.sh
+./scripts/test-demo-api.sh
+```
+
+**测试统计**：
+- 学生管理模块：7 个接口
+- 产品管理模块：7 个接口
+- 客户管理模块：7 个接口
+- 总计：21 个接口调用
+
+**输出示例**：
+```
+==========================================
+  RuoYi Demo 模块 API 测试
+  包含：学生管理、产品管理、客户管理
+==========================================
+
+[STEP] 检查后端服务状态...
+[INFO] 后端服务运行正常
+[STEP] 用户登录...
+[INFO] 登录成功
+
+[MODULE] ==========================================
+[MODULE] 学生管理模块测试
+[MODULE] ==========================================
+[STEP] 1. 查询学生列表...
+[INFO] 学生总数：3
+[STEP] 2. 新增学生...
+[INFO] 新增学生成功：操作成功
+...
+[INFO] 所有模块测试完成！
+```
+
+---
+
+## 12. 参考文档
+
+- [后端接口自动化测试规范](../../standards/testing.md)
+- [登录认证流程详解](03-登录认证流程.md)
+- [API 设计规范](../../standards/api-design.md)
+
+---
+
 **创建时间**: 2026-04-08  
 **基于版本**: RuoYi v3.9.2
