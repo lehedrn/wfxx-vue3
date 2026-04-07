@@ -42,6 +42,7 @@
 | [controller.md](./ruoyi-admin/controller.md) | 控制器（公共、系统、监控、工具） |
 | [03-登录认证流程.md](./ruoyi-admin/03-登录认证流程.md) | 登录认证完整流程 |
 | [04-权限验证流程.md](./ruoyi-admin/04-权限验证流程.md) | 权限验证完整流程 |
+| [curl-登录认证脚本.md](./ruoyi-admin/curl-登录认证脚本.md) | 登录认证 cURL 脚本示例 |
 
 ---
 
@@ -232,7 +233,8 @@ docs/ruoyi-project-document/
 │   ├── config.md
 │   ├── controller.md
 │   ├── 03-登录认证流程.md
-│   └── 04-权限验证流程.md
+│   ├── 04-权限验证流程.md
+│   └── curl-登录认证脚本.md
 ├── ruoyi-common.md                # Common 模块入口
 ├── ruoyi-common/
 │   ├── annotation.md
@@ -312,7 +314,7 @@ docs/ruoyi-project-document/
 | ruoyi-generator | 6 篇 |
 | ruoyi-gen-cli | 9 篇 + 操作手册 |
 | ruoyi-ui | 10 篇 |
-| **总计** | **55 篇** |
+| **总计** | **56 篇** |
 
 ---
 
