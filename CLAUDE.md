@@ -32,7 +32,8 @@ scripts/run-frontend.sh   # 运行前端（端口 3888，使用 pnpm）
 
 ### 代码生成
 ```bash
-java -jar ruoyi-gen-cli.jar --sql=xxx.sql --config=xxx.yml --output=xxx.zip
+scripts/gen-code.sh <sql 文件> <配置文件> [输出文件]
+# 示例：scripts/gen-code.sh student.sql student.yml output.zip
 ```
 
 ---
@@ -64,8 +65,16 @@ java -jar ruoyi-gen-cli.jar --sql=xxx.sql --config=xxx.yml --output=xxx.zip
 
 ### 文档写入规范
 - 单次写入超过 200 行时，分段完成（每次 100-200 行）
-- 文档内容过大时，进行文档拆分（按主题或章节）
+- 文档内容过大时，先根据当前情况拆分并创建分文档，然后依次写入分文档
+- 拆分策略：按主题拆分或按模块拆分
 - 拆分后的文档通过索引文档组织
+- 避免上下文丢失
+
+### 命名规范
+- 文件名、目录名使用小写字母
+- 单词间使用下划线 `_` 连接
+- **不要使用空格**
+- 中文文件名允许（如 `01-概述.md`）
 
 ---
 
@@ -74,7 +83,7 @@ java -jar ruoyi-gen-cli.jar --sql=xxx.sql --config=xxx.yml --output=xxx.zip
 ### 步骤 1：使用代码生成器
 - 参考 [ruoyi-gen-cli 操作手册](./docs/ruoyi-project-document/ruoyi-gen-cli_操作手册.md)
 - 编写 DDL SQL 和 YAML 配置
-- 执行生成命令生成基础代码
+- 使用 `scripts/gen-code.sh` 脚本生成基础代码
 
 ### 步骤 2：集成基础代码
 - 将生成的代码复制到项目对应目录
