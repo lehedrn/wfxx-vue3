@@ -10,8 +10,8 @@
 
 | 文档 | 说明 | 状态 |
 |------|------|------|
-| [后端编码规范](./coding/backend.md) | Spring Boot + Java 编码规范 | ✅ 已创建 |
-| [前端编码规范](./coding/frontend.md) | Vue 3 + TypeScript 编码规范 | ✅ 已创建 |
+| [后端编码规范](./coding/backend.md) | Spring Boot + Java 编码规范（RuoYi 风格） | ✅ 已创建 |
+| [前端编码规范](./coding/frontend.md) | Vue 3 编码规范（RuoYi 风格） | ✅ 已创建 |
 
 ### 其他规范
 
