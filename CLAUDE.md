@@ -55,6 +55,25 @@ scripts/gen-code.sh --list                # 列出可用配置
 
 ---
 
+## 开发环境
+
+详细环境配置请参考 [00-开发环境配置.md](./docs/ruoyi-project-document/00-开发环境配置.md)。
+
+### Docker 环境
+
+| 服务 | 容器名 | 说明 |
+|------|--------|------|
+| MySQL | `mysql8` | 数据库 ry-vue / root / lihaidong |
+| Redis | `redis8` | 密码 lihaidong |
+
+**启动命令**：
+```bash
+docker restart mysql8   # 启动 MySQL
+docker restart redis8   # 启动 Redis
+```
+
+---
+
 ## 3. AI 行为偏好
 
 ### 修改代码前
