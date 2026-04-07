@@ -1085,6 +1085,63 @@ await expect(page.locator('.result')).toBeVisible()
 
 ---
 
+### 6.5 快速调试技巧
+
+**元素定位调试太耗时？这几个技巧能立刻提效：**
+
+#### 技巧 1：用 Codegen 试定位（30 秒）
+
+不确定选择器怎么写？用 Playwright 自带的 Codegen 工具试一下：
+
+```bash
+cd scripts/test/e2e
+npx playwright codegen http://localhost:3888/demo/student
+```
+
+操作浏览器，左侧实时显示生成的选择器，复制过来参考即可。
+
+#### 技巧 2：截图调试（10 秒）
+
+```javascript
+// 提交前截图，查看页面实际状态
+await page.screenshot({ path: 'debug/before-submit.png' })
+```
+
+#### 技巧 3：打印元素数量（5 秒）
+
+```javascript
+// 排查 strict mode violation
+const count = await page.locator('.el-select').count()
+console.log('el-select 数量:', count)  // 如果>1，需要更精确的选择器
+```
+
+#### 技巧 4：复制现有测试（1 分钟）
+
+学生/客户/产品测试已覆盖常见组件，直接复制修改：
+
+| 组件 | 参考文件 |
+|------|----------|
+| el-select | `student.spec.js` 性别选择 |
+| 日期选择器 | `student.spec.js` 生日选择 |
+| 主子表 | `customer.spec.js` 商品列表 |
+| 树形表格 | `product.spec.js` 产品分类 |
+
+#### 技巧 5：保存页面 HTML（离线分析）
+
+```javascript
+const fs = require('fs')
+const html = await page.content()
+fs.writeFileSync('debug/page.html', html)
+// 用浏览器打开 page.html，在本地用 DevTools 调试选择器
+```
+
+// 推荐
+await page.waitForLoadState('networkidle')
+await expect(page.locator('.result')).toBeVisible()
+```
+
+---
+
 ## 8. 与 curl 测试的对比
 
 | 维度 | curl 测试 | Playwright E2E 测试 |
