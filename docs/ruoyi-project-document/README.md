@@ -1,7 +1,7 @@
 # RuoYi-Vue 项目文档索引
 
 **文档版本**: 1.0  
-**最后更新**: 2026-04-07  
+**最后更新**: 2026-04-08  
 **项目版本**: RuoYi-Vue 3.9.2
 
 ---
@@ -21,6 +21,7 @@
 | ⏰ **ruoyi-quartz** | 定时任务模块 | [详情](./ruoyi-quartz.md) |
 | 🎨 **ruoyi-generator** | 代码生成器模块 | [详情](./ruoyi-generator.md) |
 | 🔨 **ruoyi-gen-cli** | CLI 代码生成工具 | [详情](./ruoyi-gen-cli.md) |
+| 📚 **新建子模块指南** | 后端子模块创建流程 | [详情](./新建子模块指南.md) |
 | 🎯 **ruoyi-ui** | Vue 3 前端 | [详情](./ruoyi-ui.md) |
 
 ---
@@ -284,6 +285,7 @@ docs/ruoyi-project-document/
 │   ├── 07-SQL_配置详解.md
 │   └── 08-配置模板.md
 ├── ruoyi-gen-cli_操作手册.md       # Gen-CLI 操作手册
+├── 新建子模块指南.md               # 后端子模块创建流程
 ├── ruoyi-ui.md                    # UI 前端入口
 └── ruoyi-ui/
     ├── 01-工程概述.md
@@ -310,7 +312,7 @@ docs/ruoyi-project-document/
 | ruoyi-generator | 6 篇 |
 | ruoyi-gen-cli | 9 篇 + 操作手册 |
 | ruoyi-ui | 10 篇 |
-| **总计** | **54 篇** |
+| **总计** | **55 篇** |
 
 ---
 
