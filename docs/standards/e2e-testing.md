@@ -209,25 +209,32 @@ test('访问个人中心', async ({ authenticatedPage }) => {
 
 ### 4.3 按钮定位
 
-#### 工具栏按钮
+#### 按钮文本注意（Element Plus）
 
-若依系统的按钮通常包含图标和文本，使用以下方式进行定位：
+Element Plus 按钮文本可能包含空格（中文排版空格），需要精确匹配：
 
 ```javascript
-// 方式 1：通过文本定位（推荐）
-await page.click('button:has-text("新增")')
-await page.click('button:has-text("修改")')
-await page.click('button:has-text("删除")')
-await page.click('button:has-text("搜索")')
-await page.click('button:has-text("重置")')
-await page.click('button:has-text("导出")')
+// 错误：button:has-text("确定") - 找不到按钮
+// 正确：button:has-text("确 定") <- 注意"确"和"定"中间有空格
 
-// 方式 2：通过角色定位
-await page.getByRole('button', { name: '新增' }).click()
+// 方式 1：使用精确文本（推荐）
+await dialog.locator('button:has-text("确 定")').click()
+await dialog.locator('button:has-text("取 消")').click()
 
-// 方式 3：通过类型 + 文本组合
-await page.click('button.el-button--primary:has-text("新增")')
+// 方式 2：使用正则表达式忽略空格
+await dialog.locator('button:has-text(/确\\s*定/)').click()
+
+// 方式 3：使用角色选择器（不依赖文本）
+await dialog.locator('.el-dialog__footer .el-button--primary').click()
 ```
+
+**常见按钮文本**：
+| 按钮 | 实际文本 | 定位器 |
+|------|----------|--------|
+| 确定 | `确 定` | `button:has-text("确 定")` |
+| 取消 | `取 消` | `button:has-text("取 消")` |
+| 搜索 | `搜索` | `button:has-text("搜索")` |
+| 新增 | `新增` | `button:has-text("新增")` |
 
 #### 行内操作按钮
 
@@ -250,44 +257,82 @@ const editButtons = page.locator('tbody button:has-text("修改")')
 
 ### 4.4 表单元素定位
 
-#### 输入框
+#### 输入框（Element Plus）
+
+Element Plus 使用 Vue 3，需要触发 `input` 事件确保值被正确捕获：
 
 ```javascript
-// 方式 1：通过占位符定位（推荐）
-await page.fill('input[placeholder="请输入学生名称"]', '张三')
+// 方式 1：fill + dispatchEvent（推荐）
+const nameInput = dialog.locator('input[placeholder="请输入学生名称"]')
+await nameInput.fill('张三')
+await nameInput.dispatchEvent('input')  // 触发 Vue 响应式
 
-// 方式 2：通过标签定位
-await page.getByLabel('学生名称').fill('张三')
+// 方式 2：fill 后点击其他地方让输入框失去焦点
+await nameInput.fill('张三')
+await dialog.locator('.el-dialog__title').click()  // 点击标题让输入框失去焦点
+await page.waitForTimeout(200)
 
-// 方式 3：通过 CSS 属性定位
-await page.fill('input[name="name"]', '张三')
+// 方式 3：使用 type 模拟真实输入（较慢但更真实）
+await nameInput.type('张三', { delay: 50 })
 ```
 
-#### 下拉选择框
+**注意事项**：
+- Element Plus 使用 v-model 双向绑定，需要触发 input 事件
+- 提交前确保值已同步，否则可能提交空值
+- 多个输入框时，每个都需要触发事件
+
+#### 下拉选择框（Element Plus）
+
+Element Plus 的 el-select 不是原生 `<select>` 元素，需要使用键盘操作：
 
 ```javascript
-// 方式 1：selectOption（推荐）
-await page.selectOption('.el-select', '0')
-await page.selectOption('select[name="sex"]', { label: '男' })
+// 方式 1：键盘操作（推荐，适用于所有 el-select）
+const sexSelect = dialog.locator('.el-select').first()
+await sexSelect.click()
+await page.waitForTimeout(300)
+await page.press('body', 'ArrowDown')  // 选择第一个选项
+await page.press('body', 'Enter')      // 确认选择
 
-// 方式 2：点击后选择选项
+// 方式 2：使用选项文本定位
 await page.click('.el-select')
 await page.click('.el-select-dropdown__item:has-text("男")')
 
-// 方式 3：使用角色选择器
-await page.getByRole('combobox').selectOption('0')
+// 方式 3：selectOption 仅适用于原生 select
+await page.selectOption('select[name="sex"]', { label: '男' })
 ```
 
-#### 日期选择器
+**注意事项**：
+- el-select 打开后，选项在 body 下的弹出层中，不是 select 元素内
+- 使用键盘操作更可靠，避免弹出层定位问题
+- 多个 el-select 时，使用 `.first()` 或更精确的选择器
+
+#### 日期选择器（Element Plus）
+
+Element Plus 的 el-date-picker 需要特殊处理：
 
 ```javascript
-// 直接填充日期（ISO 格式）
-await page.fill('input[type="date"]', '2006-01-15')
+// 方式 1：直接填充（部分情况有效）
+await page.fill('input[placeholder="请选择生日"]', '2006-01-15')
 
-// 点击日期选择器并选择
-await page.click('.el-date-editor')
-await page.click('.el-date-table td:not(.disabled):has-text("15")')
+// 方式 2：点击后选择日期（推荐）
+const birthdayInput = dialog.locator('input[placeholder="请选择生日"]')
+await birthdayInput.click()
+await page.waitForTimeout(300)
+
+// 查找日期单元格（使用可见性过滤）
+const dateCell = page.locator('td:has-text("15"):visible').first()
+if (await dateCell.count() > 0) {
+  await dateCell.click({ force: true })
+}
+
+// 等待日期选择器关闭
+await page.waitForTimeout(300)
 ```
+
+**注意事项**：
+- 日期选择器弹出层在 body 下，不在对话框内
+- 使用 `:visible` 或 `:not(.disabled)` 过滤可用日期
+- 可能需要使用 `force: true` 选项
 
 #### 单选框
 
@@ -336,6 +381,39 @@ const cellText = await page.locator('tbody tr').first().locator('td').nth(1).tex
 await expect(page.locator('tbody')).toContainText('张三')
 ```
 
+#### 行内操作按钮
+
+若依系统表格行内操作按钮（修改/删除）：
+
+```javascript
+// 方式 1：直接定位行内按钮（推荐）
+const editButton = page.locator('tbody tr button:has-text("修改")').first()
+await editButton.click()
+
+// 方式 2：先定位行，再找按钮
+const row = page.locator('tbody tr:has-text("张三")').first()
+await row.locator('button:has-text("修改")').click()
+
+// 注意：不要先勾选 checkbox 再点击批量按钮，直接使用行内按钮
+```
+
+#### 主子表表格
+
+当页面包含主子表（如客户管理 - 商品列表）时：
+
+```javascript
+// 问题：页面有多个 tbody（主表 + 子表）
+// 解决方案 1：使用.first() 定位主表
+const mainTable = page.locator('.el-table__body tbody').first()
+
+// 解决方案 2：使用更精确的选择器
+const customerTable = page.locator('.app-container .el-table__body tbody')
+
+// 解决方案 3：在对话框内定位子表
+const dialog = page.locator('.el-dialog')
+const goodsTable = dialog.locator('.el-table tbody')
+```
+
 #### 分页定位
 
 ```javascript
@@ -352,23 +430,76 @@ await expect(page.locator('.el-pagination__total')).toContainText('共')
 
 ---
 
-### 4.6 对话框定位
+### 4.6 对话框处理
+
+#### 对话框基本操作
 
 ```javascript
 // 等待对话框打开
 await page.waitForSelector('.el-dialog__title')
+const dialog = page.locator('.el-dialog')
 
 // 验证对话框标题
-await expect(page.locator('.el-dialog__title')).toContainText('新增')
+await expect(dialog.locator('.el-dialog__title')).toContainText('新增')
 
-// 点击确定按钮
-await page.click('.el-dialog__footer button:has-text("确定")')
+// 填写表单
+const nameInput = dialog.locator('input[placeholder="请输入学生名称"]')
+await nameInput.fill('张三')
+await nameInput.dispatchEvent('input')  // 触发 Vue 响应式
 
-// 点击取消按钮
-await page.click('.el-dialog__footer button:has-text("取消")')
+// 确保值已同步（点击对话框标题让输入框失去焦点）
+await dialog.locator('.el-dialog__title').click()
+await page.waitForTimeout(200)
 
-// 关闭对话框（ESC 键）
-await page.keyboard.press('Escape')
+// 提交
+await dialog.locator('button:has-text("确 定")').click()
+
+// 等待成功消息
+const successMessage = page.locator('.el-message--success')
+await expect(successMessage).toBeVisible()
+
+// 等待对话框关闭
+await dialog.waitFor({ state: 'hidden' })
+```
+
+#### 对话框验证错误处理
+
+```javascript
+// 提交后检查是否有错误
+const errorMessage = page.locator('.el-message--error')
+if (await errorMessage.count() > 0) {
+  const errorText = await errorMessage.first().textContent()
+  console.log('提交失败:', errorText)
+  throw new Error('提交失败：' + errorText)
+}
+
+// 检查对话框是否未关闭（可能提交失败）
+const dialogStillVisible = await dialog.count()
+if (dialogStillVisible > 0) {
+  console.log('对话框未关闭，提交可能失败')
+  // 截图调试
+  await page.screenshot({ path: 'debug/dialog-error.png' })
+}
+```
+
+#### 主子表对话框
+
+```javascript
+// 添加子表行
+await dialog.locator('button:has-text("添加")').click()
+await page.waitForTimeout(300)
+
+// 填写子表数据
+const goodsNameInput = dialog.locator('input[placeholder="请输入商品名称"]').first()
+await goodsNameInput.fill('测试商品')
+await goodsNameInput.dispatchEvent('input')
+
+// 子表选择器（在表格内）
+const goodsTypeSelect = dialog.locator('.el-table .el-select').first()
+await goodsTypeSelect.click()
+await page.press('body', 'ArrowDown')
+await page.press('body', 'Enter')
+```
 ```
 
 ---

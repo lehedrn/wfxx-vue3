@@ -36,13 +36,31 @@ test.describe('产品管理 - 树形列表', () => {
     // 点击新增
     await authenticatedPage.click('button:has-text("新增")')
     await authenticatedPage.waitForSelector('.el-dialog__title')
+    await authenticatedPage.waitForTimeout(300)
 
-    // 填写表单
+    const dialog = authenticatedPage.locator('.el-dialog')
+
+    // 填写产品名称
     const productName = `测试产品_${Date.now()}`
-    await authenticatedPage.fill('input[placeholder="请输入产品名称"]', productName)
+    const nameInput = dialog.locator('input[placeholder="请输入产品名称"]')
+    await nameInput.fill(productName)
+    await nameInput.dispatchEvent('input')
+
+    // 填写显示顺序
+    const sortInput = dialog.locator('input[placeholder="请输入显示顺序"]')
+    await sortInput.fill('1')
+    await sortInput.dispatchEvent('input')
+
+    // 选择状态
+    const statusRadio = dialog.locator('label.el-radio:has-text("成功")')
+    await statusRadio.click()
+
+    // 确保值已同步
+    await dialog.locator('.el-dialog__title').click()
+    await authenticatedPage.waitForTimeout(200)
 
     // 提交
-    await authenticatedPage.click('button:has-text("确定")')
+    await dialog.locator('button:has-text("确 定")').click()
 
     // 验证成功
     await expect(authenticatedPage.locator('.el-message--success')).toBeVisible()
