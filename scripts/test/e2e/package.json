@@ -1,0 +1,17 @@
+{
+  "name": "ruoyi-e2e-tests",
+  "version": "1.0.0",
+  "description": "RuoYi 前后端联调 E2E 测试",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:login": "playwright test tests/login.spec.js",
+    "test:student": "playwright test tests/demo/student.spec.js",
+    "test:product": "playwright test tests/demo/product.spec.js",
+    "test:customer": "playwright test tests/demo/customer.spec.js",
+    "report": "playwright show-report reports/html"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0"
+  }
+}
