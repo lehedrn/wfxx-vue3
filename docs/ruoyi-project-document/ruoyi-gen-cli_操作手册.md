@@ -274,6 +274,7 @@ CREATE TABLE demo_student (
 创建 `student.yml` 文件：
 
 ```yaml
+# ==================== 全局默认配置 ====================
 global:
   author: dev
   packageName: com.ruoyi.demo
@@ -284,10 +285,15 @@ global:
   tplWebType: element-plus
   parentMenuId: 4
 
+# ==================== 表级配置 ====================
 tables:
   demo_student:
     className: Student
+    functionAuthor: dev
     functionName: 学生管理
+    businessName: student
+    formColNum: 1
+    
     columns:
       sex:
         dictType: sys_user_sex
