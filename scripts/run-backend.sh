@@ -304,7 +304,7 @@ stop_service() {
 restart_service() {
     stop_service
     sleep 2
-    start_service false
+    start_service true  # 使用后台模式启动
 }
 
 # 显示状态

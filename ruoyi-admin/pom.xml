@@ -60,6 +60,12 @@
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
+        <!-- 基础信息模块 -->
+        <dependency>
+            <groupId>com.ruoyi</groupId>
+            <artifactId>ruoyi-base</artifactId>
+            <version>${ruoyi.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
