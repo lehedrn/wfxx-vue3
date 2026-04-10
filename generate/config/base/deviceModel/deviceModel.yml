@@ -1,0 +1,196 @@
+# ==================== 全局默认配置 ====================
+global:
+  author: coderleehd
+  packageName: com.ruoyi.base
+  moduleName: base
+  autoRemovePre: true
+  tablePrefix: base_
+  tplCategory: crud
+  tplWebType: element-plus
+  parentMenuId: 2069
+
+# ==================== 表级配置 ====================
+tables:
+  base_device_model:
+    className: DeviceModel
+    functionAuthor: coderleehd
+    functionName: 设备型号管理
+    businessName: deviceModel
+    formColNum: 2
+    tplCategory: crud
+    tplWebType: element-plus
+    packageName: com.ruoyi.base
+    moduleName: base
+    parentMenuId: 2069
+
+    columns:
+      name:
+        columnComment: 设备型号名称
+        javaType: String
+        javaField: name
+        isInsert: true
+        isEdit: true
+        isList: true
+        isQuery: true
+        isRequired: true
+        queryType: LIKE
+        htmlType: input
+      device_type:
+        columnComment: 设备类型
+        javaType: String
+        javaField: deviceType
+        isInsert: true
+        isEdit: true
+        isList: true
+        isQuery: true
+        isRequired: true
+        queryType: EQ
+        htmlType: select
+        dictType: sys_device_type
+      memory:
+        columnComment: 内存(GB)
+        javaType: Integer
+        javaField: memory
+        isInsert: true
+        isEdit: true
+        isList: false
+        isQuery: false
+        isRequired: true
+        queryType: EQ
+        htmlType: input
+      disk:
+        columnComment: 硬盘容量(GB)
+        javaType: Integer
+        javaField: disk
+        isInsert: true
+        isEdit: true
+        isList: false
+        isQuery: false
+        isRequired: false
+        queryType: EQ
+        htmlType: input
+      os:
+        columnComment: 操作系统
+        javaType: String
+        javaField: os
+        isInsert: true
+        isEdit: true
+        isList: false
+        isQuery: false
+        isRequired: false
+        queryType: EQ
+        htmlType: select
+        dictType: sys_device_os
+      motherboard_manufacturer:
+        columnComment: 主板厂家
+        javaType: String
+        javaField: motherboardManufacturer
+        isInsert: true
+        isEdit: true
+        isList: false
+        isQuery: false
+        isRequired: false
+        queryType: LIKE
+        htmlType: input
+      cpu_model:
+        columnComment: CPU型号
+        javaType: String
+        javaField: cpuModel
+        isInsert: true
+        isEdit: true
+        isList: true
+        isQuery: false
+        isRequired: false
+        queryType: EQ
+        htmlType: select
+        dictType: sys_cpu_model
+      cpu_cores:
+        columnComment: CPU核心数
+        javaType: Integer
+        javaField: cpuCores
+        isInsert: true
+        isEdit: true
+        isList: false
+        isQuery: false
+        isRequired: false
+        queryType: EQ
+        htmlType: input
+      cpu_frequency:
+        columnComment: 主频(GHz)
+        javaType: BigDecimal
+        javaField: cpuFrequency
+        isInsert: true
+        isEdit: true
+        isList: false
+        isQuery: false
+        isRequired: false
+        queryType: EQ
+        htmlType: input
+      cpu_count:
+        columnComment: CPU数量
+        javaType: Integer
+        javaField: cpuCount
+        isInsert: true
+        isEdit: true
+        isList: false
+        isQuery: false
+        isRequired: false
+        queryType: EQ
+        htmlType: input
+      gpu_model:
+        columnComment: GPU型号
+        javaType: String
+        javaField: gpuModel
+        isInsert: true
+        isEdit: true
+        isList: true
+        isQuery: false
+        isRequired: false
+        queryType: EQ
+        htmlType: select
+        dictType: sys_gpu_model
+      gpu_compute_power:
+        columnComment: GPU算力
+        javaType: String
+        javaField: gpuComputePower
+        isInsert: true
+        isEdit: true
+        isList: false
+        isQuery: false
+        isRequired: false
+        queryType: EQ
+        htmlType: input
+      gpu_memory:
+        columnComment: 显存(GB)
+        javaType: Integer
+        javaField: gpuMemory
+        isInsert: true
+        isEdit: true
+        isList: false
+        isQuery: false
+        isRequired: false
+        queryType: EQ
+        htmlType: input
+      gpu_count:
+        columnComment: GPU数量
+        javaType: Integer
+        javaField: gpuCount
+        isInsert: true
+        isEdit: true
+        isList: false
+        isQuery: false
+        isRequired: false
+        queryType: EQ
+        htmlType: input
+      status:
+        columnComment: 状态
+        javaType: String
+        javaField: status
+        isInsert: true
+        isEdit: true
+        isList: true
+        isQuery: true
+        isRequired: true
+        queryType: EQ
+        htmlType: radio
+        dictType: sys_common_status

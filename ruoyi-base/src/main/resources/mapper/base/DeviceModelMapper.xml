@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.base.mapper.DeviceModelMapper">
+    
+    <resultMap type="DeviceModel" id="DeviceModelResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="deviceType"    column="device_type"    />
+        <result property="memory"    column="memory"    />
+        <result property="disk"    column="disk"    />
+        <result property="os"    column="os"    />
+        <result property="motherboardManufacturer"    column="motherboard_manufacturer"    />
+        <result property="cpuModel"    column="cpu_model"    />
+        <result property="cpuCores"    column="cpu_cores"    />
+        <result property="cpuFrequency"    column="cpu_frequency"    />
+        <result property="cpuCount"    column="cpu_count"    />
+        <result property="gpuModel"    column="gpu_model"    />
+        <result property="gpuComputePower"    column="gpu_compute_power"    />
+        <result property="gpuMemory"    column="gpu_memory"    />
+        <result property="gpuCount"    column="gpu_count"    />
+        <result property="status"    column="status"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="remark"    column="remark"    />
+        <result property="delFlag"    column="del_flag"    />
+    </resultMap>
+
+    <sql id="selectDeviceModelVo">
+        select id, name, device_type, memory, disk, os, motherboard_manufacturer, cpu_model, cpu_cores, cpu_frequency, cpu_count, gpu_model, gpu_compute_power, gpu_memory, gpu_count, status, create_time, update_time, create_by, update_by, remark, del_flag from base_device_model
+    </sql>
+
+    <select id="selectDeviceModelList" parameterType="DeviceModel" resultMap="DeviceModelResult">
+        <include refid="selectDeviceModelVo"/>
+        <where>
+            del_flag = '0'
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="deviceType != null  and deviceType != ''"> and device_type = #{deviceType}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+
+    <select id="selectDeviceModelById" parameterType="Long" resultMap="DeviceModelResult">
+        <include refid="selectDeviceModelVo"/>
+        where id = #{id} and del_flag = '0'
+    </select>
+
+    <insert id="insertDeviceModel" parameterType="DeviceModel" useGeneratedKeys="true" keyProperty="id">
+        insert into base_device_model
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">name,</if>
+            <if test="deviceType != null and deviceType != ''">device_type,</if>
+            <if test="memory != null">memory,</if>
+            <if test="disk != null">disk,</if>
+            <if test="os != null">os,</if>
+            <if test="motherboardManufacturer != null">motherboard_manufacturer,</if>
+            <if test="cpuModel != null">cpu_model,</if>
+            <if test="cpuCores != null">cpu_cores,</if>
+            <if test="cpuFrequency != null">cpu_frequency,</if>
+            <if test="cpuCount != null">cpu_count,</if>
+            <if test="gpuModel != null">gpu_model,</if>
+            <if test="gpuComputePower != null">gpu_compute_power,</if>
+            <if test="gpuMemory != null">gpu_memory,</if>
+            <if test="gpuCount != null">gpu_count,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="remark != null">remark,</if>
+            <if test="delFlag != null">del_flag,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="deviceType != null and deviceType != ''">#{deviceType},</if>
+            <if test="memory != null">#{memory},</if>
+            <if test="disk != null">#{disk},</if>
+            <if test="os != null">#{os},</if>
+            <if test="motherboardManufacturer != null">#{motherboardManufacturer},</if>
+            <if test="cpuModel != null">#{cpuModel},</if>
+            <if test="cpuCores != null">#{cpuCores},</if>
+            <if test="cpuFrequency != null">#{cpuFrequency},</if>
+            <if test="cpuCount != null">#{cpuCount},</if>
+            <if test="gpuModel != null">#{gpuModel},</if>
+            <if test="gpuComputePower != null">#{gpuComputePower},</if>
+            <if test="gpuMemory != null">#{gpuMemory},</if>
+            <if test="gpuCount != null">#{gpuCount},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDeviceModel" parameterType="DeviceModel">
+        update base_device_model
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="deviceType != null and deviceType != ''">device_type = #{deviceType},</if>
+            <if test="memory != null">memory = #{memory},</if>
+            <if test="disk != null">disk = #{disk},</if>
+            <if test="os != null">os = #{os},</if>
+            <if test="motherboardManufacturer != null">motherboard_manufacturer = #{motherboardManufacturer},</if>
+            <if test="cpuModel != null">cpu_model = #{cpuModel},</if>
+            <if test="cpuCores != null">cpu_cores = #{cpuCores},</if>
+            <if test="cpuFrequency != null">cpu_frequency = #{cpuFrequency},</if>
+            <if test="cpuCount != null">cpu_count = #{cpuCount},</if>
+            <if test="gpuModel != null">gpu_model = #{gpuModel},</if>
+            <if test="gpuComputePower != null">gpu_compute_power = #{gpuComputePower},</if>
+            <if test="gpuMemory != null">gpu_memory = #{gpuMemory},</if>
+            <if test="gpuCount != null">gpu_count = #{gpuCount},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteDeviceModelById" parameterType="Long">
+        update base_device_model set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteDeviceModelByIds" parameterType="String">
+        update base_device_model set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
