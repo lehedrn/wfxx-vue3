@@ -87,3 +87,4 @@ upload_path
 logs
 generate/output
 .pid
+project_tmp
