@@ -74,6 +74,7 @@ scripts/test/e2e/node_modules/
 scripts/test/e2e/reports/
 
 scripts/test/e2e/tests/**/playwright-browsers/
+scripts/test/e2e/playwright-report
 
 scripts/test/e2e/tests/**/*.png
 scripts/test/e2e/tests/**/*.webm
