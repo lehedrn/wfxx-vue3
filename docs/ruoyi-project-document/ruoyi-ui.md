@@ -154,7 +154,7 @@ pnpm preview
 | `monitor/` | 系统监控 API（缓存/任务/日志等） |
 | `tool/` | 系统工具 API（代码生成） |
 
-详细文档：[05-API 接口层.md](ruoyi-ui/05-API 接口层.md)
+详细文档：[05-API_接口层.md](ruoyi-ui/05-API_接口层.md)
 
 ### 4. 通用组件
 
@@ -299,7 +299,7 @@ await userStore.logOut()
 | [02-核心配置.md](ruoyi-ui/02-核心配置.md) | settings.js, vite.config.js, 环境变量 |
 | [03-路由系统.md](ruoyi-ui/03-路由系统.md) | router, permission.js, 动态路由机制 |
 | [04-状态管理.md](ruoyi-ui/04-状态管理.md) | Pinia stores (user/permission/settings 等) |
-| [05-API 接口层.md](ruoyi-ui/05-API 接口层.md) | API 目录结构和调用规范 |
+| [05-API_接口层.md](ruoyi-ui/05-API_接口层.md) | API 目录结构和调用规范 |
 | [06-通用组件.md](ruoyi-ui/06-通用组件.md) | components 和 layout |
 | [07-页面模块.md](ruoyi-ui/07-页面模块.md) | views 页面组件 |
 | [08-工具函数.md](ruoyi-ui/08-工具函数.md) | utils 工具类 |
